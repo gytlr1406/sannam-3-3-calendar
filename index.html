@@ -27,7 +27,8 @@ button,input,select{font-family:inherit}
 b{font-weight:900}
 
 /* ───── 상단 바 ───── */
-.tools{position:sticky;top:8px;z-index:20;max-width:1120px;margin:0 auto 14px;background:#fff;border:1px solid var(--sky-line);border-radius:14px;padding:9px 12px;box-shadow:0 4px 16px rgba(31,78,140,.10);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.topbar{position:sticky;top:0;z-index:20;padding:8px 0 4px;margin:0 auto 10px;max-width:1120px;background:linear-gradient(180deg,var(--sky) 0%,var(--sky) 85%,rgba(234,244,252,0) 100%)}
+.tools{max-width:1120px;margin:0 auto 10px;background:#fff;border:1px solid var(--sky-line);border-radius:14px;padding:9px 12px;box-shadow:0 4px 16px rgba(31,78,140,.10);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .btn{border:1px solid var(--sky-line);background:#fff;color:var(--navy);padding:8px 13px;border-radius:10px;font-weight:700;font-size:13.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;white-space:nowrap;position:relative}
 .btn:hover{background:var(--navy-soft);border-color:var(--navy)}
 .btn:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
@@ -52,12 +53,17 @@ b{font-weight:900}
 .notice.show{display:block}
 .notice h2{margin:0 0 4px;font-size:15px;color:var(--orange-dark)}
 .notice code{background:var(--sky);padding:1px 6px;border-radius:5px;font-size:12.5px;word-break:break-all}
-.mine-panel{max-width:1120px;margin:0 auto 14px;background:#fff;border:var(--bw) solid var(--pink);border-radius:14px;padding:10px 14px;display:none}
+.mine-panel{max-width:1120px;margin:0 auto;background:#fff;border:var(--bw) solid var(--pink);border-radius:14px;padding:10px 14px;display:none;box-shadow:0 4px 16px rgba(184,37,89,.12)}
 .mine-panel.show{display:block}
 .mine-panel h2{margin:0 0 6px;font-size:15px;color:var(--pink-dark);display:flex;align-items:center;gap:8px}
 .mine-panel h2 small{font-weight:500;color:var(--muted);font-size:12px}
 .mine-panel ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
-.mine-panel li{display:flex;gap:10px;align-items:center;padding:7px 12px;background:var(--pink-soft);border-radius:9px;font-size:13.5px;white-space:nowrap}
+.mine-panel li{display:flex;gap:10px;align-items:center;padding:7px 12px;background:var(--pink-soft);border-radius:9px;font-size:13.5px;white-space:nowrap;flex:none;cursor:pointer;border:1.5px solid transparent;transition:.15s}
+.mine-panel li:hover{border-color:var(--pink);background:#fff}
+.mine-panel li:active{transform:scale(.98)}
+@keyframes flash{0%,100%{box-shadow:0 0 0 0 rgba(232,68,122,0)}30%{box-shadow:0 0 0 4mm rgba(232,68,122,.45)}}
+.flash{animation:flash 1.4s ease-out 2}
+.mcell.flash{animation:none;outline:3px solid var(--pink);outline-offset:-3px}
 .mine-panel li .d{font-weight:900;color:var(--pink-dark);font-variant-numeric:tabular-nums}
 .mine-panel li .u{display:flex;flex-direction:column;line-height:1.25}
 .mine-panel li .u b{font-weight:900}
@@ -178,7 +184,13 @@ body.exporting .bar .dd{display:none}
 
 @media (max-width:760px){
   body{padding:8px 8px 40px}
-  .tools{padding:8px 10px;gap:6px;top:6px}
+  .topbar{padding:6px 0 4px}
+  .tools{padding:8px 10px;gap:6px}
+  .status{display:none}
+  .mine-panel{padding:6px 10px 8px}
+  .mine-panel h2{font-size:13px;margin-bottom:4px}
+  .mine-panel ul{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  .mine-panel li{font-size:13px;padding:6px 10px}
   .me{flex:1 1 100%}
   .me select{flex:1}
   .btn{padding:8px 11px;font-size:13px}
@@ -222,7 +234,7 @@ body.exporting .bar .dd{display:none}
 @media print{
   @page{size:A4 landscape;margin:8mm}
   body{background:#fff;padding:0}
-  .tools,.notice,.mine-panel,.mobile,#toast,.overlay,.busy{display:none!important}
+  .topbar,.tools,.notice,.mine-panel,.mobile,#toast,.overlay,.busy{display:none!important}
   :root{--s:1!important}
   .pages{position:static!important;gap:0;display:block}
   .pagewrap{width:277mm;height:190mm;page-break-after:always;break-after:page}
@@ -240,6 +252,7 @@ body.exporting .bar .dd{display:none}
 </head>
 <body>
 
+<div class="topbar">
 <div class="tools">
   <label class="me">내 이름 <select id="meSel"><option value="">선택 안 함</option></select></label>
   <span class="imgwrap"><button class="btn" id="btnImg">📷 이미지로 저장 ▾</button>
@@ -250,9 +263,10 @@ body.exporting .bar .dd{display:none}
   <span class="spacer"></span>
   <span class="status" id="status">일정을 불러오는 중…</span>
 </div>
+<section class="mine-panel" id="minePanel"><h2 id="mineTitle"></h2><div id="mineBody"></div></section>
+</div>
 
 <section class="notice" id="notice"></section>
-<section class="mine-panel" id="minePanel"><h2 id="mineTitle"></h2><div id="mineBody"></div></section>
 
 <div class="pages" id="pages"></div>
 <div class="mobile" id="mobile"></div>
@@ -473,7 +487,7 @@ function renderMine(){
   const list = sorted().filter(isMine);
   $('mineTitle').innerHTML = `${esc(me)}의 면접/실기 일정 <small>${list.length}건</small>`;
   $('mineBody').innerHTML = list.length
-    ? `<ul>${list.map(e => { const u = splitUniv(e.univ); return `<li><span class="d">${fmtMDW(e.start)}${e.end!==e.start?'~'+fmtMDW(e.end):''}</span><span class="u"><b>${esc(u.univ)}</b>${u.type?`<small>${esc(u.type)}</small>`:''}</span>${ddayHtml(e)}</li>`; }).join('')}</ul>`
+    ? `<ul>${list.map(e => { const u = splitUniv(e.univ); return `<li data-goto="${esc(e.id)}" data-start="${e.start}" title="달력에서 보기"><span class="d">${fmtMDW(e.start)}${e.end!==e.start?'~'+fmtMDW(e.end):''}</span><span class="u"><b>${esc(u.univ)}</b>${u.type?`<small>${esc(u.type)}</small>`:''}</span>${ddayHtml(e)}</li>`; }).join('')}</ul>`
     : `<div class="none">등록된 일정이 없습니다. 조사 폼에 응답했는지 확인하거나 담임 선생님께 알려 주세요.</div>`;
   panel.classList.add('show');
 }
@@ -536,7 +550,17 @@ function openDay(k){
     : `<div class="none">이 날짜에 등록된 면접/실기 일정이 없습니다.</div>`;
   $('dayOv').classList.add('show');
 }
+function gotoEntry(id, start){
+  const m = +start.slice(5,7);
+  const target = isMobile() ? document.querySelector(`#mm${m} .mcell[data-date="${start}"]`) : document.querySelector(`#m${m} .bar[data-id="${CSS.escape(id)}"]`) || document.querySelector(`#m${m} .day[data-date="${start}"]`);
+  if (!target) return;
+  const top = target.getBoundingClientRect().top + window.scrollY - (document.querySelector('.topbar').offsetHeight + 24);
+  window.scrollTo({top, behavior:'smooth'});
+  document.querySelectorAll('.flash').forEach(x=>x.classList.remove('flash'));
+  setTimeout(() => { target.classList.add('flash'); setTimeout(()=>target.classList.remove('flash'), 3000); }, 350);
+}
 document.addEventListener('click', e => {
+  const go = e.target.closest('[data-goto]'); if (go) { gotoEntry(go.dataset.goto, go.dataset.start); return; }
   const closer = e.target.closest('[data-close]'); if (closer) { $(closer.dataset.close).classList.remove('show'); return; }
   if (e.target.classList.contains('overlay')) { e.target.classList.remove('show'); return; }
   const bar = e.target.closest('.bar'); if (bar) { const en = entries.find(x=>x.id===bar.dataset.id); if (en) openDay(en.start); return; }
