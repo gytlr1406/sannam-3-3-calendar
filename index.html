@@ -216,7 +216,7 @@ b{font-weight:900}
     <div class="menu" id="imgMenu"><button data-m="9">9월 달력</button><button data-m="10">10월 달력</button><button data-m="11">11월 달력</button><button data-m="12">12월 달력</button><button data-m="all" class="all">4개월 모두 저장</button></div>
   </span>
   <button class="btn primary" id="btnPrint">🖨 인쇄</button>
-  <button class="btn" id="btnReload" title="구글 시트에서 최신 일정을 다시 불러옵니다">🔄 새로고침</button>
+  <button class="btn" id="btnReload" title="최신 일정을 다시 불러옵니다">🔄 새로고침</button>
   <span class="spacer"></span>
   <span class="status" id="status">일정을 불러오는 중…</span>
 </div>
@@ -349,17 +349,17 @@ async function fetchCsv(url){
   return parseCsv(await r.text());
 }
 async function loadData(showToast){
-  if (!CFG.csvUrl) { showNotice('설정이 아직 안 됐습니다', `구글 시트를 <b>파일 → 공유 → 웹에 게시</b>에서 <b>CSV</b>로 게시한 뒤, 그 주소를 저장소의 <code>config.js</code> 파일 <code>csvUrl</code>에 넣어 주세요.`); $('status').textContent='시트 주소가 설정되지 않았습니다'; render(); return; }
-  $('status').textContent = '구글 시트에서 불러오는 중…';
+  const sources = [[CFG.csvUrl,'일정 파일'],[CFG.extraCsvUrl,'구글 시트']].filter(x=>x[0]);
+  if (!sources.length) { showNotice('설정이 아직 안 됐습니다', `저장소의 <code>config.js</code>에 일정 CSV 파일 이름이나 구글 시트의 <b>웹에 게시</b> CSV 주소를 넣어 주세요.`); $('status').textContent='일정 출처가 설정되지 않았습니다'; render(); return; }
+  $('status').textContent = '일정을 불러오는 중…';
   try {
     const all = [], bad = [];
-    const main = rowsToEntries(await fetchCsv(CFG.csvUrl), '응답 시트'); all.push(...main.out); bad.push(...main.bad);
-    if (CFG.extraCsvUrl) { const ex = rowsToEntries(await fetchCsv(CFG.extraCsvUrl), '추가 시트'); all.push(...ex.out); bad.push(...ex.bad); }
+    for (const [url,label] of sources) { const r = rowsToEntries(await fetchCsv(url), label); all.push(...r.out); bad.push(...r.bad); }
     entries = mergeEntries(all); badRows = bad; loadedAt = new Date();
     hideNotice(); render(); if (showToast) toast('최신 일정으로 갱신했습니다');
   } catch(err) {
     console.error(err);
-    showNotice('일정을 불러오지 못했습니다', `구글 시트가 <b>웹에 게시</b> 상태인지, <code>config.js</code>의 주소가 맞는지 확인해 주세요. (${esc(err.message)})<br>마지막으로 불러온 내용이 있으면 그대로 보여 드립니다.`);
+    showNotice('일정을 불러오지 못했습니다', `<code>config.js</code>의 파일 이름·주소가 맞는지, 구글 시트라면 <b>웹에 게시</b> 상태인지 확인해 주세요. (${esc(err.message)})<br>마지막으로 불러온 내용이 있으면 그대로 보여 드립니다.`);
     $('status').textContent = '불러오기 실패'; render();
   }
 }
