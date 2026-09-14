@@ -487,7 +487,7 @@ function renderMine(){
   const list = sorted().filter(isMine);
   $('mineTitle').innerHTML = `${esc(me)}의 면접/실기 일정 <small>${list.length}건</small>`;
   $('mineBody').innerHTML = list.length
-    ? `<ul>${list.map(e => { const u = splitUniv(e.univ); return `<li data-goto="${esc(e.id)}" data-start="${e.start}" title="달력에서 보기"><span class="d">${fmtMDW(e.start)}${e.end!==e.start?'~'+fmtMDW(e.end):''}</span><span class="u"><b>${esc(u.univ)}</b>${u.type?`<small>${esc(u.type)}</small>`:''}</span>${ddayHtml(e)}</li>`; }).join('')}</ul>`
+    ? `<ul>${list.map(e => { const u = splitUniv(e.univ); return `<li data-goto="${esc(e.id)}" data-start="${e.start}" title="달력에서 보기"><span class="d">${fmtMDW(e.start)}${e.end!==e.start?'~'+fmtMDW(e.end):''}</span><span class="u"><b>${esc(u.univ)}</b></span>${ddayHtml(e)}</li>`; }).join('')}</ul>`
     : `<div class="none">등록된 일정이 없습니다. 조사 폼에 응답했는지 확인하거나 담임 선생님께 알려 주세요.</div>`;
   panel.classList.add('show');
 }
