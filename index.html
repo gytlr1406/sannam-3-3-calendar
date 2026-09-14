@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3-3 수시 면접·실기 일정 달력</title>
+<link rel="icon" href="logo.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+:root{
+  --sky:#EAF4FC; --sky-2:#D8E9F7; --sky-line:#BFD6EC;
+  --navy:#1F4E8C; --navy-dark:#173B6B; --navy-soft:#E3ECF8;
+  --ivory:#FFF8E7; --ivory-2:#FBEFD2;
+  --ink:#1E2430; --muted:#6B7A90; --line:#D5DEE8;
+  --sun:#C0392B; --sat:#2E6FBF;
+  --orange:#F26B1D; --orange-dark:#C4500C; --orange-soft:#FFEEDD;
+  --pink:#E8447A; --pink-dark:#B82559; --pink-soft:#FDE7EF;
+  --bw:.7mm; --shadow:0 12px 36px rgba(31,78,140,.16); --s:1;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:"Noto Sans KR","Pretendard","Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 10% -10%,#F6FBFF 0%,transparent 60%),radial-gradient(800px 400px at 100% 0%,#D3E6F7 0%,transparent 55%),var(--sky);
+  min-height:100vh;padding:14px 12px 60px;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:14px;line-height:1.4}
+button,input,select{font-family:inherit}
+b{font-weight:900}
+
+/* ───── 상단 바 ───── */
+.tools{position:sticky;top:8px;z-index:20;max-width:1120px;margin:0 auto 14px;background:#fff;border:1px solid var(--sky-line);border-radius:14px;padding:9px 12px;box-shadow:0 4px 16px rgba(31,78,140,.10);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid var(--sky-line);background:#fff;color:var(--navy);padding:8px 13px;border-radius:10px;font-weight:700;font-size:13.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;white-space:nowrap;position:relative}
+.btn:hover{background:var(--navy-soft);border-color:var(--navy)}
+.btn:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+.btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn.primary:hover{background:var(--navy-dark)}
+.spacer{flex:1}
+.me{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--navy)}
+.me select{font-size:14px;padding:7px 10px;border:1.5px solid var(--sky-line);border-radius:10px;color:var(--ink);background:#fff;font-weight:700;min-width:150px}
+.me select.on{border-color:var(--pink);background:var(--pink-soft);color:var(--pink-dark)}
+.status{font-size:12px;color:var(--muted)}
+.status b{color:var(--navy)}
+.status .warn{color:var(--sun);font-weight:700;cursor:pointer;text-decoration:underline}
+.imgwrap{position:relative;display:inline-flex}
+.menu{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid var(--sky-line);border-radius:12px;box-shadow:0 10px 28px rgba(31,78,140,.18);padding:6px;display:none;flex-direction:column;min-width:170px;z-index:30}
+.menu.show{display:flex}
+.menu button{border:0;background:transparent;text-align:left;padding:9px 12px;border-radius:8px;font-size:13.5px;font-weight:700;color:var(--ink);cursor:pointer}
+.menu button:hover{background:var(--navy-soft);color:var(--navy)}
+.menu button.all{border-top:1px solid var(--sky-line);border-radius:0 0 8px 8px;margin-top:4px;padding-top:11px;color:var(--navy)}
+
+/* ───── 안내 · 내 일정 ───── */
+.notice{max-width:1120px;margin:0 auto 14px;background:#fff;border:var(--bw) solid var(--orange);border-radius:14px;padding:12px 16px;display:none;font-size:13.5px;line-height:1.55}
+.notice.show{display:block}
+.notice h2{margin:0 0 4px;font-size:15px;color:var(--orange-dark)}
+.notice code{background:var(--sky);padding:1px 6px;border-radius:5px;font-size:12.5px;word-break:break-all}
+.mine-panel{max-width:1120px;margin:0 auto 14px;background:#fff;border:var(--bw) solid var(--pink);border-radius:14px;padding:10px 14px;display:none}
+.mine-panel.show{display:block}
+.mine-panel h2{margin:0 0 6px;font-size:15px;color:var(--pink-dark);display:flex;align-items:center;gap:8px}
+.mine-panel h2 small{font-weight:500;color:var(--muted);font-size:12px}
+.mine-panel ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.mine-panel li{display:flex;gap:8px;align-items:baseline;padding:6px 10px;background:var(--pink-soft);border-radius:8px;font-size:13.5px}
+.mine-panel li .d{font-weight:900;color:var(--pink-dark);white-space:nowrap;font-variant-numeric:tabular-nums}
+.mine-panel li .u{font-weight:900}
+.mine-panel li .n{color:var(--muted);font-size:12px}
+.mine-panel .none{color:var(--muted);font-size:13px}
+
+/* ───── A4 가로 시트 (데스크톱 · 인쇄 · 이미지) ───── */
+.pages{display:flex;flex-direction:column;align-items:center;gap:calc(28px * var(--s))}
+.pagewrap{width:calc(277mm * var(--s));height:calc(190mm * var(--s));flex:none}
+.pagewrap .sheet{transform:scale(var(--s));transform-origin:top left}
+.sheet{width:277mm;height:190mm;background:var(--sky);border:2.6mm solid var(--navy);border-radius:5mm;padding:4mm 6mm 5mm;box-shadow:var(--shadow);position:relative;display:flex;flex-direction:column;overflow:hidden}
+.head{display:flex;align-items:center;gap:4mm;padding-bottom:2.5mm;border-bottom:.8mm solid var(--navy);flex:none}
+.head img{width:14mm;height:14mm;border-radius:50%;box-shadow:0 .6mm 1.6mm rgba(0,0,0,.18);flex:none}
+.head .t{flex:1;min-width:0}
+.head .eyebrow{font-size:8pt;font-weight:700;letter-spacing:.14em;color:var(--navy)}
+.head h1{margin:.5mm 0 0;font-size:19pt;font-weight:900;color:var(--navy);letter-spacing:-.02em;white-space:nowrap;line-height:1.15}
+.head h1 small{font-size:9.5pt;font-weight:500;color:var(--muted);margin-left:3mm;letter-spacing:0}
+.head .month{flex:none;display:flex;align-items:baseline;gap:2mm;background:var(--ivory);border:.6mm solid var(--navy);border-radius:3mm;padding:1.5mm 5mm}
+.head .month b{font-size:26pt;font-weight:900;color:var(--navy);line-height:1;letter-spacing:-.02em}
+.head .month span{font-size:11pt;font-weight:900;color:var(--navy)}
+.head .month small{font-size:9pt;font-weight:500;color:var(--muted);margin-left:1mm}
+.cal{margin-top:3mm;flex:1;display:flex;flex-direction:column;border:var(--bw) solid var(--navy);border-radius:3.5mm;overflow:hidden;background:#fff;min-height:0}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);background:var(--navy);flex:none}
+.dow div{color:#fff;text-align:center;font-size:10pt;font-weight:900;padding:1.6mm 0;letter-spacing:.12em}
+.dow div.sun{color:#FFD2CC}.dow div.sat{color:#CFE3FF}
+.week{position:relative;display:grid;grid-template-columns:repeat(7,1fr);flex:1;min-height:0;border-top:.3mm solid var(--line)}
+.week:first-of-type{border-top:0}
+.day{position:relative;border-left:.3mm solid var(--line);background:#fff;cursor:pointer;min-height:0}
+.day:first-child{border-left:0}
+.day:hover{background:var(--navy-soft)}
+.day.off{background:var(--ivory)}
+.day.off:hover{background:var(--ivory-2)}
+.day.empty{background:var(--sky-2);cursor:default}
+.day .num{position:absolute;top:1.2mm;left:1.8mm;font-size:11pt;font-weight:900;color:var(--navy);line-height:1}
+.day.sun .num{color:var(--sun)}.day.sat .num{color:var(--sat)}
+.day.hol .num{color:var(--sun)}
+.day .hname{position:absolute;top:1.6mm;left:9mm;right:1.5mm;font-size:7pt;font-weight:700;color:var(--sun);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day .hname.ev{left:8.5mm;top:1.3mm;font-size:7pt;font-weight:900;padding:.3mm 1.8mm;border-radius:99px;width:max-content;max-width:calc(100% - 10mm)}
+.day .hname.info{color:var(--navy);background:#fff;border:.3mm solid var(--navy)}
+.day .hname.exam{color:#fff;background:var(--navy)}
+.day .hname.csat{color:#fff;background:var(--orange);font-size:7.8pt;letter-spacing:.02em}
+.day.csat{background:var(--orange-soft)!important;box-shadow:inset 0 0 0 var(--bw) var(--orange)}
+.day.csat .num{color:var(--orange-dark);font-size:13pt}
+.day.exam{background:#F3F7FD}
+.day.mine{box-shadow:inset 0 0 0 var(--bw) var(--pink)}
+.day.csat.mine{box-shadow:inset 0 0 0 var(--bw) var(--pink),inset 0 0 0 calc(var(--bw) * 2) var(--orange)}
+.day .more{position:absolute;right:1.5mm;bottom:1mm;font-size:7pt;font-weight:900;color:var(--navy);background:var(--ivory);border:.25mm solid var(--navy);border-radius:99px;padding:.2mm 1.6mm}
+.lanes{position:absolute;left:0;right:0;top:6.5mm;bottom:1mm;pointer-events:none;overflow:hidden}
+.bar{position:absolute;pointer-events:auto;cursor:pointer;background:var(--ivory);border:.3mm solid var(--navy);border-radius:1.6mm;padding:.6mm 1.6mm;font-size:7.6pt;line-height:1.28;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all;overflow-wrap:anywhere;box-shadow:0 .3mm .8mm rgba(31,78,140,.10)}
+.bar b{color:var(--navy);margin-right:.8mm}
+.bar:hover{background:var(--ivory-2);border-color:var(--navy-dark)}
+.bar.mine{background:var(--pink-soft);border:var(--bw) solid var(--pink);padding:calc(.6mm - .4mm) calc(1.6mm - .4mm)}
+.bar.mine b{color:var(--pink-dark)}
+.bar.cont-l{border-top-left-radius:0;border-bottom-left-radius:0;border-left-style:dashed}
+.bar.cont-r{border-top-right-radius:0;border-bottom-right-radius:0;border-right-style:dashed}
+.bar .span{font-size:6.5pt;font-weight:700;color:var(--muted);margin-left:.8mm;white-space:nowrap}
+
+/* ───── 모바일 달력 ───── */
+.mobile{display:none;max-width:560px;margin:0 auto;flex-direction:column;gap:14px}
+.mcard{background:#fff;border:2.5px solid var(--navy);border-radius:14px;overflow:hidden}
+.mhead{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--sky);border-bottom:2px solid var(--navy)}
+.mhead img{width:30px;height:30px;border-radius:50%}
+.mhead .t{flex:1;min-width:0}
+.mhead .t .e{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--navy)}
+.mhead .t h2{margin:0;font-size:15px;font-weight:900;color:var(--navy);line-height:1.2}
+.mhead .mo{background:var(--ivory);border:2px solid var(--navy);border-radius:8px;padding:2px 10px;font-weight:900;color:var(--navy);font-size:18px;line-height:1.2;white-space:nowrap}
+.mhead .mo small{font-size:11px;font-weight:900;margin-left:2px}
+.mdow{display:grid;grid-template-columns:repeat(7,1fr);background:var(--navy)}
+.mdow div{color:#fff;text-align:center;font-size:11px;font-weight:900;padding:5px 0;letter-spacing:.08em}
+.mdow div.sun{color:#FFD2CC}.mdow div.sat{color:#CFE3FF}
+.mgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.mcell{min-height:64px;min-width:0;overflow:hidden;border-top:1px solid var(--line);border-left:1px solid var(--line);padding:3px 3px 4px;position:relative;background:#fff;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.mcell:nth-child(7n+1){border-left:0}
+.mcell.empty{background:var(--sky-2);cursor:default}
+.mcell.off{background:var(--ivory)}
+.mcell .n{font-size:12px;font-weight:900;color:var(--navy);line-height:1}
+.mcell.sun .n,.mcell.hol .n{color:var(--sun)}.mcell.sat .n{color:var(--sat)}
+.mcell .lb{font-size:8.5px;font-weight:900;line-height:1.15;color:var(--sun);white-space:nowrap;overflow:hidden;max-width:100%;word-break:keep-all}
+.mcell .lb.wrap{white-space:normal;border-radius:6px}
+.mcell .lb.exam{color:#fff;background:var(--navy);border-radius:99px;padding:1px 4px;width:max-content;max-width:100%}
+.mcell .lb.info{color:var(--navy);border:1px solid var(--navy);border-radius:99px;padding:0 4px;width:max-content;max-width:100%}
+.mcell .lb.csat{color:#fff;background:var(--orange);border-radius:99px;padding:1px 4px;width:max-content;max-width:100%}
+.mcell.csat{background:var(--orange-soft);box-shadow:inset 0 0 0 2.5px var(--orange)}
+.mcell.csat .n{color:var(--orange-dark)}
+.mcell.exam{background:#F3F7FD}
+.mcell.mine{box-shadow:inset 0 0 0 2.5px var(--pink)}
+.mcell.csat.mine{box-shadow:inset 0 0 0 2.5px var(--pink),inset 0 0 0 5px var(--orange)}
+.chip{font-size:9.5px;font-weight:900;color:var(--navy);background:var(--ivory);border:1px solid var(--navy);border-radius:4px;padding:1px 3px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip.mine{background:var(--pink-soft);border:2px solid var(--pink);color:var(--pink-dark);padding:0 2px}
+.chip.cl{border-top-left-radius:0;border-bottom-left-radius:0;border-left-style:dashed}
+.chip.cr{border-top-right-radius:0;border-bottom-right-radius:0;border-right-style:dashed}
+.mcell .plus{font-size:9px;font-weight:900;color:var(--navy)}
+.mlegend{display:flex;flex-wrap:wrap;gap:6px 12px;padding:8px 12px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);background:#fff}
+.mlegend span{display:inline-flex;align-items:center;gap:4px}
+.mlegend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+@media (max-width:760px){
+  body{padding:8px 8px 40px}
+  .tools{padding:8px 10px;gap:6px;top:6px}
+  .me{flex:1 1 100%}
+  .me select{flex:1}
+  .btn{padding:8px 11px;font-size:13px}
+  .status{flex:1 1 100%}
+  .pages{position:absolute;left:-9999px;top:0}
+  .mobile{display:flex}
+}
+
+/* ───── 모달 · 바텀시트 ───── */
+.overlay{position:fixed;inset:0;background:rgba(23,59,107,.38);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:16px;width:min(560px,100%);max-height:92vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);border:1px solid var(--sky-line)}
+.modal h3{margin:0;padding:14px 18px;font-size:16px;color:var(--navy);border-bottom:1px solid var(--sky-line);display:flex;align-items:center;gap:8px}
+.modal h3 .x{margin-left:auto;border:0;background:transparent;font-size:20px;cursor:pointer;color:var(--muted);line-height:1;padding:2px 6px}
+.modal .body{padding:14px 18px;display:grid;gap:12px}
+.modal .hint{font-size:12px;color:var(--muted);font-weight:500}
+.modal .foot{margin:0;padding:12px 18px 14px;border-top:1px solid var(--sky-line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.preview{font-size:12px;color:var(--muted);background:var(--sky);border-radius:8px;padding:8px 10px;max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-all}
+.overlay.sheetov{align-items:flex-end;padding:0}
+.bsheet{background:#fff;border-radius:18px 18px 0 0;width:min(640px,100%);max-height:80vh;overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+.bsheet h3{margin:0;padding:14px 18px 10px;font-size:16px;color:var(--navy);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--sky-line)}
+.bsheet h3 .tag{font-size:11px;font-weight:900;color:#fff;background:var(--navy);border-radius:99px;padding:2px 8px}
+.bsheet h3 .tag.csat{background:var(--orange)}
+.bsheet h3 .tag.hol{background:var(--sun)}
+.bsheet h3 .x{margin-left:auto;border:0;background:transparent;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;padding:2px 6px}
+.bsheet ul{list-style:none;margin:0;padding:10px 14px 16px;display:grid;gap:8px}
+.bsheet li{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--ivory);border:1.5px solid var(--navy);border-radius:10px;font-size:14px;line-height:1.35}
+.bsheet li.mine{background:var(--pink-soft);border:2.5px solid var(--pink)}
+.bsheet li .txt{flex:1;min-width:0}
+.bsheet li .txt b{color:var(--navy);margin-right:5px}
+.bsheet li.mine .txt b{color:var(--pink-dark)}
+.bsheet li .txt small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.bsheet .none{padding:18px 14px 22px;color:var(--muted);font-size:13.5px;text-align:center}
+
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--navy-dark);color:#fff;padding:10px 18px;border-radius:12px;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:60;max-width:92vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.busy{position:fixed;inset:0;background:rgba(255,255,255,.55);z-index:70;display:none;align-items:center;justify-content:center;font-weight:900;color:var(--navy);font-size:15px}
+.busy.show{display:flex}
+
+@media print{
+  @page{size:A4 landscape;margin:8mm}
+  body{background:#fff;padding:0}
+  .tools,.notice,.mine-panel,.mobile,#toast,.overlay,.busy{display:none!important}
+  :root{--s:1!important}
+  .pages{position:static!important;gap:0;display:block}
+  .pagewrap{width:277mm;height:190mm;page-break-after:always;break-after:page}
+  .pagewrap:last-child{page-break-after:auto;break-after:auto}
+  .sheet{box-shadow:none;margin:0;transform:none!important;background:#fff}
+  .day:hover,.day.off:hover{background:inherit}
+  .bar:hover{background:var(--ivory)}
+}
+</style>
+</head>
+<body>
+
+<div class="tools">
+  <label class="me">내 이름 <select id="meSel"><option value="">선택 안 함</option></select></label>
+  <span class="imgwrap"><button class="btn" id="btnImg">📷 이미지로 저장 ▾</button>
+    <div class="menu" id="imgMenu"><button data-m="9">9월 달력</button><button data-m="10">10월 달력</button><button data-m="11">11월 달력</button><button data-m="12">12월 달력</button><button data-m="all" class="all">4개월 모두 저장</button></div>
+  </span>
+  <button class="btn primary" id="btnPrint">🖨 인쇄</button>
+  <button class="btn" id="btnReload" title="구글 시트에서 최신 일정을 다시 불러옵니다">🔄 새로고침</button>
+  <span class="spacer"></span>
+  <span class="status" id="status">일정을 불러오는 중…</span>
+</div>
+
+<section class="notice" id="notice"></section>
+<section class="mine-panel" id="minePanel"><h2 id="mineTitle"></h2><div id="mineBody"></div></section>
+
+<div class="pages" id="pages"></div>
+<div class="mobile" id="mobile"></div>
+
+<div class="overlay sheetov" id="dayOv"><div class="bsheet"><h3 id="dayTitle"></h3><div id="dayBody"></div></div></div>
+
+<div class="overlay" id="imgOv"><div class="modal" style="width:min(900px,100%)">
+  <h3>📷 달력 이미지<button class="x" data-close="imgOv" aria-label="닫기">×</button></h3>
+  <div class="body"><div class="hint" id="imgHint"></div><div id="imgList" style="display:grid;gap:12px"></div></div>
+  <div class="foot"><button class="btn primary" data-close="imgOv">닫기</button></div>
+</div></div>
+
+<div class="overlay" id="badOv"><div class="modal">
+  <h3>날짜를 해석하지 못한 응답<button class="x" data-close="badOv" aria-label="닫기">×</button></h3>
+  <div class="body"><div class="hint">아래 응답은 날짜 형식을 읽지 못해 달력에 표시되지 않았습니다. 구글 시트에서 날짜 칸을 <b>2026-10-15</b> 또는 <b>10/15</b>, 기간이면 <b>10/15~10/16</b> 형태로 고쳐 주세요.</div><div class="preview" id="badList"></div></div>
+  <div class="foot"><button class="btn primary" data-close="badOv">닫기</button></div>
+</div></div>
+
+<div id="toast"></div>
+<div class="busy" id="busy">이미지를 만드는 중…</div>
+
+<script src="config.js"></script>
+<script>
+/* ═══════════ 고정 정보 ═══════════ */
+const CFG = Object.assign({ csvUrl:'', extraCsvUrl:'', year:2026, autoRefreshMinutes:10 }, window.CAL_CONFIG || {});
+const YEAR = +CFG.year || 2026, MONTHS = [9,10,11,12];
+const LOGO = 'logo.png';
+const STUDENTS = [[1,'권예진'],[2,'김민주'],[3,'김서연'],[4,'김소진'],[5,'김아린'],[6,'김예나'],[7,'김진솔'],[9,'김현지'],[10,'나예진'],[11,'문나경'],[12,'박성원'],[13,'박수지'],[14,'박의진'],[15,'손정아'],[16,'손하린'],[17,'이다연'],[18,'이세인'],[19,'이솔미'],[20,'이하윤'],[21,'임유진'],[22,'진송민'],[23,'진재연'],[24,'최서이'],[25,'최소윤'],[26,'최윤서'],[27,'황보연']];
+const HOLIDAYS = {
+  '2026-09-24':'추석 연휴','2026-09-25':'추석','2026-09-26':'추석 연휴',
+  '2026-10-03':'개천절','2026-10-05':'대체공휴일','2026-10-09':'한글날','2026-12-25':'성탄절',
+};
+const EVENTS = {   // kind: csat=수능 강조, exam=고사, info=행사
+  '2026-09-17':{label:'2학기고사',kind:'exam'}, '2026-09-18':{label:'2학기고사',kind:'exam'}, '2026-09-21':{label:'2학기고사',kind:'exam'}, '2026-09-22':{label:'2학기고사',kind:'exam'},
+  '2026-10-20':{label:'10월 학평',kind:'exam'},
+  '2026-11-19':{label:'대학수학능력시험',kind:'csat'},
+  '2026-11-30':{label:'3학년 체험학습',kind:'info'},
+  '2026-12-28':{label:'겨울방학식',kind:'info'},
+};
+const DOW = ['일','월','화','수','목','금','토'];
+
+/* ═══════════ 상태 ═══════════ */
+const $ = id => document.getElementById(id);
+const ME_KEY = 'interviewCal-3-3-me';
+let entries = [], badRows = [], loadedAt = null;
+let me = ''; try { me = localStorage.getItem(ME_KEY) || ''; } catch(e){}
+
+/* ═══════════ 날짜 유틸 ═══════════ */
+const pad = n => String(n).padStart(2,'0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fromISO = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
+const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+const fmtMD = s => { const d=fromISO(s); return `${d.getMonth()+1}/${d.getDate()}`; };
+const fmtMDW = s => { const d=fromISO(s); return `${d.getMonth()+1}/${d.getDate()}(${DOW[d.getDay()]})`; };
+const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const isMine = e => !!me && e.names.includes(me);
+const sorted = () => entries.slice().sort((a,b)=> a.start.localeCompare(b.start) || a.univ.localeCompare(b.univ,'ko'));
+
+/* ═══════════ 구글 시트(CSV) 읽기 ═══════════ */
+function parseCsv(text){
+  const rows=[]; let row=[], cell='', q=false;
+  for (let i=0;i<text.length;i++){ const c=text[i];
+    if (q) { if (c==='"') { if (text[i+1]==='"') { cell+='"'; i++; } else q=false; } else cell+=c; }
+    else if (c==='"') q=true; else if (c===',') { row.push(cell); cell=''; } else if (c==='\n' || c==='\r') { if (c==='\r' && text[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=''; } else cell+=c; }
+  if (cell!=='' || row.length) { row.push(cell); rows.push(row); }
+  return rows.map(r => r.map(v => v.replace(/^﻿/,'').trim()));
+}
+function parseDateRange(v){
+  if (v==null || v==='') return null;
+  let s = String(v).trim().replace(/\s*(오전|오후)\s*\d{1,2}:\d{2}(:\d{2})?/g,'').replace(/\s+\d{1,2}:\d{2}(:\d{2})?/g,'');
+  const parts = s.split(/\s*(?:~|∼|～|-|–|—|부터|to)\s*/).filter(Boolean);
+  const one = t => { let m;
+    if ((m = t.match(/(\d{4})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})/))) return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
+    if ((m = t.match(/^(\d{1,2})\s*[.\/월]\s*(\d{1,2})\s*일?\s*(?:\(.\))?$/))) return `${YEAR}-${pad(m[1])}-${pad(m[2])}`;
+    if ((m = t.match(/^(\d{1,2})\s*[.\/]\s*(\d{1,2})\s*[.\/]\s*(\d{4})$/))) return `${m[3]}-${pad(m[1])}-${pad(m[2])}`;
+    if ((m = t.match(/^(\d{1,2})월\s*(\d{1,2})일$/))) return `${YEAR}-${pad(m[1])}-${pad(m[2])}`;
+    return null; };
+  const whole = one(s); if (whole && parts.length>=3) return {start:whole,end:whole};
+  const a = one(parts[0]); if (!a) return null;
+  let b = parts.length>1 ? one(parts[parts.length-1]) : null;
+  if (parts.length>1 && !b) { const m = parts[parts.length-1].match(/^(\d{1,2})\s*일?$/); if (m) b = a.slice(0,8)+pad(m[1]); }
+  if (b && b < a) b = null;
+  return {start:a, end:b||a};
+}
+// 머리글에서 열 자동 인식: 이름 / (대학·면접일·종료일) 세트
+function detectColumns(header){
+  const h = header.map(x => String(x||''));
+  const find = re => h.map((c,i)=>re.test(c)?i:-1).filter(i=>i>=0);
+  const nameIdx = find(/이름|성명/)[0];
+  const univ = find(/대학|학교|전형|모집/).filter(i=>!/일|날짜|기간/.test(h[i]));
+  const start = find(/면접일|면접 일|실기일|실기 일|일자|날짜|시작|일시|기간/).filter(i=>!/종료|끝|마지막/.test(h[i]) && !/타임스탬프|timestamp/i.test(h[i]));
+  const end = find(/종료|끝|마지막|까지/);
+  const n = Math.min(univ.length, start.length);
+  return { nameIdx, sets: Array.from({length:n}, (_,k)=>({u:univ[k], s:start[k], e:end[k] ?? -1})) };
+}
+function rowsToEntries(rows, label){
+  const out = [], bad = [];
+  const hi = rows.findIndex(r => r.some(v => /이름|성명/.test(v)));
+  if (hi < 0) { bad.push(`[${label}] '이름' 열이 있는 머리글을 찾지 못했습니다`); return {out, bad}; }
+  const {nameIdx, sets} = detectColumns(rows[hi]);
+  if (nameIdx==null || !sets.length) { bad.push(`[${label}] 이름·대학·면접일 열을 찾지 못했습니다 (머리글: ${rows[hi].join(' | ')})`); return {out, bad}; }
+  rows.slice(hi+1).forEach(r => {
+    const name = String(r[nameIdx]||'').replace(/\s+/g,''); if (!name) return;
+    sets.forEach(st => {
+      const univ = String(r[st.u]||'').trim(); if (!univ) return;
+      const range = parseDateRange(r[st.s]);
+      if (!range) { bad.push(`${name} · ${univ} · "${r[st.s]||'(비어 있음)'}"`); return; }
+      if (st.e >= 0) { const er = parseDateRange(r[st.e]); if (er && er.end > range.end) range.end = er.end; }
+      out.push({univ, name, start:range.start, end:range.end});
+    });
+  });
+  return {out, bad};
+}
+function mergeEntries(list){
+  const map = new Map();
+  list.forEach(x => { const k = `${x.univ.replace(/\s+/g,'')}|${x.start}|${x.end}`;
+    if (!map.has(k)) map.set(k, {id:k, univ:x.univ, names:[], start:x.start, end:x.end});
+    const e = map.get(k); if (!e.names.includes(x.name)) e.names.push(x.name); });
+  return [...map.values()];
+}
+async function fetchCsv(url){
+  const u = url + (url.includes('?') ? '&' : '?') + '_=' + Date.now();   // 캐시 우회
+  const r = await fetch(u, {cache:'no-store'}); if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return parseCsv(await r.text());
+}
+async function loadData(showToast){
+  if (!CFG.csvUrl) { showNotice('설정이 아직 안 됐습니다', `구글 시트를 <b>파일 → 공유 → 웹에 게시</b>에서 <b>CSV</b>로 게시한 뒤, 그 주소를 저장소의 <code>config.js</code> 파일 <code>csvUrl</code>에 넣어 주세요.`); $('status').textContent='시트 주소가 설정되지 않았습니다'; render(); return; }
+  $('status').textContent = '구글 시트에서 불러오는 중…';
+  try {
+    const all = [], bad = [];
+    const main = rowsToEntries(await fetchCsv(CFG.csvUrl), '응답 시트'); all.push(...main.out); bad.push(...main.bad);
+    if (CFG.extraCsvUrl) { const ex = rowsToEntries(await fetchCsv(CFG.extraCsvUrl), '추가 시트'); all.push(...ex.out); bad.push(...ex.bad); }
+    entries = mergeEntries(all); badRows = bad; loadedAt = new Date();
+    hideNotice(); render(); if (showToast) toast('최신 일정으로 갱신했습니다');
+  } catch(err) {
+    console.error(err);
+    showNotice('일정을 불러오지 못했습니다', `구글 시트가 <b>웹에 게시</b> 상태인지, <code>config.js</code>의 주소가 맞는지 확인해 주세요. (${esc(err.message)})<br>마지막으로 불러온 내용이 있으면 그대로 보여 드립니다.`);
+    $('status').textContent = '불러오기 실패'; render();
+  }
+}
+function showNotice(t, html){ $('notice').innerHTML = `<h2>${t}</h2>${html}`; $('notice').classList.add('show'); }
+function hideNotice(){ $('notice').classList.remove('show'); }
+
+/* ═══════════ 렌더링 ═══════════ */
+function monthWeeks(m){
+  const first = new Date(YEAR, m-1, 1), last = new Date(YEAR, m, 0);
+  const weeks = []; let cur = addDays(first, -first.getDay());
+  while (cur <= last) { weeks.push(Array.from({length:7}, (_,i)=>addDays(cur,i))); cur = addDays(cur,7); }
+  return {first, last, weeks};
+}
+function weekSegments(days, first, last){
+  const ms = iso(first), me_ = iso(last);
+  const ws = iso(days[0]) < ms ? ms : iso(days[0]), we = iso(days[6]) > me_ ? me_ : iso(days[6]);
+  const segs = entries.filter(e => e.start <= we && e.end >= ws).map(e => {
+    const s = e.start < ws ? ws : e.start, t = e.end > we ? we : e.end;
+    return {e, c0: fromISO(s).getDay(), c1: fromISO(t).getDay(), contL: e.start < s, contR: e.end > t};
+  }).sort((a,b) => a.c0-b.c0 || (b.c1-b.c0)-(a.c1-a.c0) || a.e.univ.localeCompare(b.e.univ,'ko'));
+  const laneEnd = []; segs.forEach(sg => { let l=0; while (laneEnd[l]!==undefined && laneEnd[l] >= sg.c0) l++; laneEnd[l]=sg.c1; sg.lane=l; });
+  return segs;
+}
+const dayClasses = (d, k) => {
+  const dow = d.getDay(), hol = HOLIDAYS[k], ev = EVENTS[k];
+  const mine = !!me && entries.some(e => isMine(e) && e.start <= k && e.end >= k);
+  return `${dow===0?' sun':dow===6?' sat':''}${hol?' hol':''}${(dow===0||dow===6||hol)?' off':''}${ev?' '+ev.kind:''}${mine?' mine':''}`;
+};
+function renderMonth(m){
+  const {first, last, weeks} = monthWeeks(m);
+  const weeksHtml = weeks.map(days => {
+    const cells = days.map(d => {
+      if (d.getMonth()!==m-1) return `<div class="day empty"></div>`;
+      const k = iso(d), hol = HOLIDAYS[k], ev = EVENTS[k];
+      const label = hol ? `<span class="hname">${hol}</span>` : ev ? `<span class="hname ev ${ev.kind}">${ev.label}</span>` : '';
+      return `<div class="day${dayClasses(d,k)}" data-date="${k}"><span class="num">${d.getDate()}</span>${label}</div>`;
+    }).join('');
+    const bars = weekSegments(days, first, last).map(sg => {
+      const e = sg.e, multi = e.start !== e.end;
+      return `<div class="bar${sg.contL?' cont-l':''}${sg.contR?' cont-r':''}${isMine(e)?' mine':''}" data-id="${esc(e.id)}" data-lane="${sg.lane}" data-c0="${sg.c0}" data-n="${sg.c1-sg.c0+1}" style="left:calc(${sg.c0}*100%/7 + 1mm);width:calc(${sg.c1-sg.c0+1}*100%/7 - 2mm)" title="${esc(e.univ)} ${esc(e.names.join(', '))} (${e.start}${multi?' ~ '+e.end:''})"><b>${esc(e.univ)}</b>${esc(e.names.join(', '))}${multi?`<span class="span">${fmtMD(e.start)}~${fmtMD(e.end)}</span>`:''}</div>`;
+    }).join('');
+    return `<div class="week">${cells}<div class="lanes">${bars}</div></div>`;
+  }).join('');
+  return `<div class="pagewrap"><section class="sheet" id="m${m}" data-month="${m}">
+    <div class="head"><img src="${LOGO}" alt="산남고등학교"><div class="t"><div class="eyebrow">SANNAM HIGH SCHOOL · 3학년 3반</div><h1>수시 면접/실기 일정 달력 <small>${YEAR}학년도 · 면접/실기 일정을 확인하세요</small></h1></div><div class="month"><b>${m}</b><span>월</span><small>${YEAR}</small></div></div>
+    <div class="cal"><div class="dow">${DOW.map((d,i)=>`<div class="${i===0?'sun':i===6?'sat':''}">${d}</div>`).join('')}</div>${weeksHtml}</div>
+  </section></div>`;
+}
+function renderMobileMonth(m){
+  const {weeks} = monthWeeks(m);
+  const cells = weeks.map(days => days.map(d => {
+    if (d.getMonth()!==m-1) return `<div class="mcell empty"></div>`;
+    const k = iso(d), hol = HOLIDAYS[k], ev = EVENTS[k];
+    const label = hol ? `<span class="lb">${hol}</span>` : ev ? `<span class="lb ${ev.kind}">${ev.label.replace('대학수학능력시험','수능')}</span>` : '';
+    const list = sorted().filter(e => e.start <= k && e.end >= k);
+    const chips = list.slice(0,3).map(e => `<div class="chip${isMine(e)?' mine':''}${e.start<k?' cl':''}${e.end>k?' cr':''}">${esc(e.univ)}</div>`).join('') + (list.length>3?`<span class="plus">+${list.length-3}</span>`:'');
+    return `<div class="mcell${dayClasses(d,k)}" data-date="${k}"><div class="n">${d.getDate()}</div>${label}${chips}</div>`;
+  }).join('')).join('');
+  return `<section class="mcard" id="mm${m}">
+    <div class="mhead"><img src="${LOGO}" alt=""><div class="t"><div class="e">SANNAM HIGH SCHOOL · 3학년 3반</div><h2>수시 면접/실기 일정 달력</h2></div><div class="mo">${m}<small>월</small></div></div>
+    <div class="mdow">${DOW.map((d,i)=>`<div class="${i===0?'sun':i===6?'sat':''}">${d}</div>`).join('')}</div>
+    <div class="mgrid">${cells}</div>
+    <div class="mlegend"><span><i style="background:var(--ivory);border:1px solid var(--navy)"></i>일정 (누르면 자세히)</span><span><i style="background:var(--pink-soft);border:2px solid var(--pink)"></i>내 일정</span><span><i style="background:var(--orange-soft);border:2px solid var(--orange)"></i>수능</span></div>
+  </section>`;
+}
+function renderMine(){
+  const panel = $('minePanel');
+  if (!me) { panel.classList.remove('show'); return; }
+  const list = sorted().filter(isMine);
+  $('mineTitle').innerHTML = `${esc(me)}의 면접/실기 일정 <small>${list.length}건</small>`;
+  $('mineBody').innerHTML = list.length
+    ? `<ul>${list.map(e => `<li><span class="d">${fmtMDW(e.start)}${e.end!==e.start?'~'+fmtMDW(e.end):''}</span><span class="u">${esc(e.univ)}</span>${e.names.length>1?`<span class="n">외 ${e.names.length-1}명 함께</span>`:''}</li>`).join('')}</ul>`
+    : `<div class="none">등록된 일정이 없습니다. 조사 폼에 응답했는지 확인하거나 담임 선생님께 알려 주세요.</div>`;
+  panel.classList.add('show');
+}
+function render(){
+  $('pages').innerHTML = MONTHS.map(renderMonth).join('');
+  $('mobile').innerHTML = MONTHS.map(renderMobileMonth).join('');
+  layoutBars(); fitLabels(); renderMine();
+  if (loadedAt) {
+    const n = entries.length, people = new Set(entries.flatMap(e=>e.names)).size;
+    const t = `${pad(loadedAt.getHours())}:${pad(loadedAt.getMinutes())}`;
+    $('status').innerHTML = `일정 <b>${n}건</b> · 학생 <b>${people}명</b> · ${t} 갱신` + (badRows.length ? ` · <span class="warn" id="badLink">해석 실패 ${badRows.length}건</span>` : '');
+    const bl = $('badLink'); if (bl) bl.onclick = () => { $('badList').textContent = badRows.join('\n'); $('badOv').classList.add('show'); };
+  }
+}
+function layoutBars(){
+  document.querySelectorAll('.week').forEach(week => {
+    const lanesEl = week.querySelector('.lanes'); const bars = [...lanesEl.querySelectorAll('.bar')];
+    week.querySelectorAll('.more').forEach(x=>x.remove());
+    if (!bars.length) return;
+    const h = {}; bars.forEach(b => { const l=+b.dataset.lane; h[l]=Math.max(h[l]||0, b.offsetHeight); });
+    const tops = {}; let acc = 0;
+    Object.keys(h).map(Number).sort((a,b)=>a-b).forEach(l => { tops[l]=acc; acc += h[l]+2; });
+    const avail = lanesEl.clientHeight, hiddenByCol = Array(7).fill(0);
+    bars.forEach(b => { const l=+b.dataset.lane; b.style.top = tops[l]+'px';
+      if (tops[l] + b.offsetHeight > avail) { b.style.visibility='hidden'; const s=+b.dataset.c0, n=+b.dataset.n; for (let c=s;c<s+n;c++) hiddenByCol[c]++; } });
+    hiddenByCol.forEach((n,c) => { if (n) { const cell = week.children[c]; if (cell && !cell.classList.contains('empty')) cell.insertAdjacentHTML('beforeend', `<span class="more">+${n}</span>`); } });
+  });
+}
+function fitLabels(){
+  document.querySelectorAll('.mcell .lb').forEach(el => {
+    if (!el.parentElement.clientWidth) return;
+    el.classList.remove('wrap'); el.style.fontSize=''; el.style.whiteSpace='nowrap';
+    let fs = 8.5;
+    while (el.scrollWidth > el.clientWidth + 0.5 && fs > 6) { fs -= 0.25; el.style.fontSize = fs+'px'; }
+    if (el.scrollWidth > el.clientWidth + 0.5) { el.classList.add('wrap'); el.style.whiteSpace=''; el.style.fontSize='7px'; }
+  });
+}
+const isMobile = () => window.matchMedia('(max-width:760px)').matches;
+function fitScale(){
+  if (isMobile()) { document.documentElement.style.setProperty('--s','1'); return; }
+  const s = Math.min(1, (document.documentElement.clientWidth - 32) / (277*96/25.4));
+  document.documentElement.style.setProperty('--s', s.toFixed(4));
+}
+window.addEventListener('resize', () => { fitScale(); layoutBars(); fitLabels(); });
+window.addEventListener('beforeprint', () => { document.documentElement.style.setProperty('--s','1'); layoutBars(); });
+window.addEventListener('afterprint', () => { fitScale(); layoutBars(); });
+if (document.fonts) document.fonts.ready.then(() => { layoutBars(); fitLabels(); });
+
+/* ═══════════ 학생 선택 · 날짜 보기 ═══════════ */
+const sel = $('meSel');
+STUDENTS.forEach(([no,name]) => { const o=document.createElement('option'); o.value=name; o.textContent=`${no}. ${name}`; sel.appendChild(o); });
+sel.value = STUDENTS.some(([,n])=>n===me) ? me : ''; sel.classList.toggle('on', !!sel.value);
+sel.onchange = () => { me = sel.value; sel.classList.toggle('on', !!me); try { localStorage.setItem(ME_KEY, me); } catch(e){} render(); if (me) toast(`${me} 학생의 일정을 분홍색으로 표시합니다`); };
+function openDay(k){
+  const d = fromISO(k), hol = HOLIDAYS[k], ev = EVENTS[k];
+  const list = sorted().filter(e => e.start <= k && e.end >= k);
+  $('dayTitle').innerHTML = `${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})${hol?`<span class="tag hol">${hol}</span>`:''}${ev?`<span class="tag ${ev.kind}">${ev.label}</span>`:''}<button class="x" data-close="dayOv" aria-label="닫기">×</button>`;
+  $('dayBody').innerHTML = list.length
+    ? `<ul>${list.map(e => `<li class="${isMine(e)?'mine':''}"><div class="txt"><b>${esc(e.univ)}</b>${esc(e.names.join(', '))}${e.start!==e.end?`<small>${fmtMDW(e.start)} ~ ${fmtMDW(e.end)}</small>`:''}</div></li>`).join('')}</ul>`
+    : `<div class="none">이 날짜에 등록된 면접/실기 일정이 없습니다.</div>`;
+  $('dayOv').classList.add('show');
+}
+document.addEventListener('click', e => {
+  const closer = e.target.closest('[data-close]'); if (closer) { $(closer.dataset.close).classList.remove('show'); return; }
+  if (e.target.classList.contains('overlay')) { e.target.classList.remove('show'); return; }
+  const bar = e.target.closest('.bar'); if (bar) { const en = entries.find(x=>x.id===bar.dataset.id); if (en) openDay(en.start); return; }
+  const day = e.target.closest('.day[data-date], .mcell[data-date]'); if (day) { openDay(day.dataset.date); return; }
+  if (!e.target.closest('.imgwrap')) $('imgMenu').classList.remove('show');
+});
+document.addEventListener('keydown', e => { if (e.key==='Escape') document.querySelectorAll('.overlay.show').forEach(o=>o.classList.remove('show')); });
+$('btnPrint').onclick = () => window.print();
+$('btnReload').onclick = () => loadData(true);
+
+/* ═══════════ 이미지로 저장 (PNG) ═══════════ */
+$('btnImg').onclick = () => $('imgMenu').classList.toggle('show');
+let madeImages = [];
+$('imgMenu').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return; $('imgMenu').classList.remove('show');
+  const list = b.dataset.m==='all' ? MONTHS : [+b.dataset.m];
+  const made = [];
+  for (const m of list) { const blob = await makeMonthPng(m); if (!blob) return; made.push({name:`면접일정달력_${YEAR}-${pad(m)}.png`, blob}); }
+  const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  if (!touch) { made.forEach(it => { const a=document.createElement('a'); a.href=URL.createObjectURL(it.blob); a.download=it.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 3000); }); toast(`${made.length}장 저장했습니다`); }
+  showImages(made, touch);
+});
+function showImages(made, touch){
+  madeImages.forEach(it => URL.revokeObjectURL(it.url)); madeImages = made.map(it => ({...it, url: URL.createObjectURL(it.blob)}));
+  $('imgHint').innerHTML = touch ? '아래 이미지를 <b>길게 눌러</b> "이미지 저장(사진에 추가)"을 선택하면 폰에 저장됩니다.' : '파일이 다운로드되었습니다. 저장이 안 됐다면 아래 이미지에서 <b>마우스 오른쪽 버튼</b> → "이미지를 다른 이름으로 저장"을 선택하세요.';
+  $('imgList').innerHTML = madeImages.map(it => `<figure style="margin:0"><img src="${it.url}" alt="${it.name}" style="width:100%;display:block;border:1px solid var(--sky-line);border-radius:8px"><figcaption style="font-size:12px;color:var(--muted);margin-top:4px">${it.name}</figcaption></figure>`).join('');
+  $('imgOv').classList.add('show');
+}
+let h2cLoading = null;
+function loadHtml2Canvas(){
+  if (window.html2canvas) return Promise.resolve();
+  if (!h2cLoading) h2cLoading = new Promise((res,rej) => { const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; s.onload=res; s.onerror=()=>rej(new Error('이미지 도구를 불러오지 못했습니다 (인터넷 연결 확인)')); document.head.appendChild(s); });
+  return h2cLoading;
+}
+async function makeMonthPng(m){
+  const busy = $('busy'); busy.textContent = `${m}월 달력 이미지를 만드는 중…`; busy.classList.add('show');
+  const pages = $('pages'), prevS = document.documentElement.style.getPropertyValue('--s'), prevCss = pages.style.cssText;
+  try {
+    await loadHtml2Canvas();
+    document.documentElement.style.setProperty('--s','1');
+    pages.style.cssText = 'position:absolute;left:0;top:0;z-index:-1;visibility:visible';
+    layoutBars(); await new Promise(r => setTimeout(r, 60));
+    const canvas = await html2canvas($('m'+m), {scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false, scrollX:0, scrollY:0, windowWidth: Math.max(1200, document.documentElement.clientWidth)});
+    return await new Promise(r => canvas.toBlob(r, 'image/png'));
+  } catch(err) { toast('이미지 만들기 실패: ' + (err && err.message || err)); return null; }
+  finally { pages.style.cssText = prevCss; document.documentElement.style.setProperty('--s', prevS || '1'); fitScale(); layoutBars(); busy.classList.remove('show'); }
+}
+let toastT; function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2800); }
+
+/* ═══════════ 시작 ═══════════ */
+fitScale(); render(); loadData(false);
+if (CFG.autoRefreshMinutes > 0) setInterval(() => loadData(false), CFG.autoRefreshMinutes*60*1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && loadedAt && Date.now()-loadedAt > 60000) loadData(false); });
+</script>
+</body>
+</html>
