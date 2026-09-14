@@ -56,16 +56,17 @@ b{font-weight:900}
 .mine-panel.show{display:block}
 .mine-panel h2{margin:0 0 6px;font-size:15px;color:var(--pink-dark);display:flex;align-items:center;gap:8px}
 .mine-panel h2 small{font-weight:500;color:var(--muted);font-size:12px}
-.mine-panel ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
-.mine-panel li{display:flex;gap:8px;align-items:baseline;padding:6px 10px;background:var(--pink-soft);border-radius:8px;font-size:13.5px}
-.mine-panel li .d{font-weight:900;color:var(--pink-dark);white-space:nowrap;font-variant-numeric:tabular-nums}
-.mine-panel li .u{font-weight:900}
-.mine-panel li .n{color:var(--muted);font-size:12px}
+.mine-panel ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.mine-panel li{display:flex;gap:10px;align-items:center;padding:7px 12px;background:var(--pink-soft);border-radius:9px;font-size:13.5px;white-space:nowrap}
+.mine-panel li .d{font-weight:900;color:var(--pink-dark);font-variant-numeric:tabular-nums}
+.mine-panel li .u{display:flex;flex-direction:column;line-height:1.25}
+.mine-panel li .u b{font-weight:900}
+.mine-panel li .u small{font-size:11.5px;font-weight:600;color:var(--muted)}
 .dday{display:inline-block;font-size:11px;font-weight:900;color:#fff;background:var(--wine);border-radius:99px;padding:1px 7px;line-height:1.4;white-space:nowrap;font-variant-numeric:tabular-nums}
 .dday.soon{background:#C8102E}
 .dday.past{background:#9AA3B0}
 .dday.now{background:var(--wine);box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--wine)}
-.mine-panel li .dday{margin-left:auto}
+.mine-panel li .dday{margin-left:2px}
 .mine-panel .none{color:var(--muted);font-size:13px}
 
 /* ───── A4 가로 시트 (데스크톱 · 인쇄 · 이미지) ───── */
@@ -426,6 +427,7 @@ function dday(e){
   if (t <= en) return {n: 0, text: 'D-DAY', cls: 'now'};
   const p = Math.round((t - en)/86400000); return {n: -p, text: `D+${p}`, cls: 'past'};
 }
+const splitUniv = u => { const m = String(u).match(/^(.*?)\s*[\(（](.+?)[\)）]\s*$/); return m ? {univ:m[1], type:m[2]} : {univ:u, type:''}; };
 const ddayHtml = (e, cls='dday') => { const d = dday(e); return `<span class="${cls} ${d.cls}">${d.text}</span>`; };
 function renderMonth(m){
   const {first, last, weeks} = monthWeeks(m);
@@ -471,7 +473,7 @@ function renderMine(){
   const list = sorted().filter(isMine);
   $('mineTitle').innerHTML = `${esc(me)}의 면접/실기 일정 <small>${list.length}건</small>`;
   $('mineBody').innerHTML = list.length
-    ? `<ul>${list.map(e => `<li><span class="d">${fmtMDW(e.start)}${e.end!==e.start?'~'+fmtMDW(e.end):''}</span><span class="u">${esc(e.univ)}</span>${e.names.length>1?`<span class="n">외 ${e.names.length-1}명 함께</span>`:''}${ddayHtml(e)}</li>`).join('')}</ul>`
+    ? `<ul>${list.map(e => { const u = splitUniv(e.univ); return `<li><span class="d">${fmtMDW(e.start)}${e.end!==e.start?'~'+fmtMDW(e.end):''}</span><span class="u"><b>${esc(u.univ)}</b>${u.type?`<small>${esc(u.type)}</small>`:''}</span>${ddayHtml(e)}</li>`; }).join('')}</ul>`
     : `<div class="none">등록된 일정이 없습니다. 조사 폼에 응답했는지 확인하거나 담임 선생님께 알려 주세요.</div>`;
   panel.classList.add('show');
 }
