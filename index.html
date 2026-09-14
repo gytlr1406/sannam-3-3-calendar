@@ -15,6 +15,7 @@
   --sun:#C0392B; --sat:#2E6FBF;
   --orange:#F26B1D; --orange-dark:#C4500C; --orange-soft:#FFEEDD;
   --pink:#E8447A; --pink-dark:#B82559; --pink-soft:#FDE7EF;
+  --wine:#7B1E3C;
   --bw:.7mm; --shadow:0 12px 36px rgba(31,78,140,.16); --s:1;
 }
 *{box-sizing:border-box}
@@ -60,6 +61,11 @@ b{font-weight:900}
 .mine-panel li .d{font-weight:900;color:var(--pink-dark);white-space:nowrap;font-variant-numeric:tabular-nums}
 .mine-panel li .u{font-weight:900}
 .mine-panel li .n{color:var(--muted);font-size:12px}
+.dday{display:inline-block;font-size:11px;font-weight:900;color:#fff;background:var(--wine);border-radius:99px;padding:1px 7px;line-height:1.4;white-space:nowrap;font-variant-numeric:tabular-nums}
+.dday.soon{background:#C8102E}
+.dday.past{background:#9AA3B0}
+.dday.now{background:var(--wine);box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--wine)}
+.mine-panel li .dday{margin-left:auto}
 .mine-panel .none{color:var(--muted);font-size:13px}
 
 /* ───── A4 가로 시트 (데스크톱 · 인쇄 · 이미지) ───── */
@@ -102,11 +108,9 @@ b{font-weight:900}
 .day.exam{background:#F3F7FD}
 .day.mine{box-shadow:inset 0 0 0 var(--bw) var(--pink)}
 .day.csat.mine{box-shadow:inset 0 0 0 var(--bw) var(--pink),inset 0 0 0 calc(var(--bw) * 2) var(--orange)}
-.day.today .num{top:.6mm;left:1.1mm;background:var(--navy);color:#fff;border-radius:99px;min-width:5.6mm;height:5.6mm;padding:0 1.2mm;display:flex;align-items:center;justify-content:center;font-size:10.5pt}
-.day.today.sun .num,.day.today.hol .num{background:var(--sun)}
-.day.today.sat .num{background:var(--sat)}
-.day.today.csat .num{background:var(--orange-dark)}
-.day .tbadge{position:absolute;top:1.2mm;right:1.4mm;font-size:6.3pt;font-weight:900;letter-spacing:.1em;color:#fff;background:var(--navy);border-radius:99px;padding:.35mm 1.8mm;line-height:1.2;pointer-events:none}
+.day.today .num{top:.6mm;left:1.1mm;background:var(--wine);color:#fff;border-radius:99px;min-width:5.6mm;height:5.6mm;padding:0 1.2mm;display:flex;align-items:center;justify-content:center;font-size:10.5pt}
+.day.today.sun .num,.day.today.hol .num,.day.today.sat .num,.day.today.csat .num{background:var(--wine);color:#fff}
+.day .tbadge{position:absolute;top:1.2mm;right:1.4mm;font-size:6.3pt;font-weight:900;letter-spacing:.1em;color:#fff;background:var(--wine);border-radius:99px;padding:.35mm 1.8mm;line-height:1.2;pointer-events:none}
 .day.today .hname{right:14mm}
 .day.today .hname.ev{max-width:calc(100% - 24mm)}
 body.exporting .tbadge{display:none}
@@ -124,6 +128,9 @@ body.exporting .day.today.csat .num{color:var(--orange-dark);font-size:13pt}
 .bar.cont-l{border-top-left-radius:0;border-bottom-left-radius:0;border-left-style:dashed}
 .bar.cont-r{border-top-right-radius:0;border-bottom-right-radius:0;border-right-style:dashed}
 .bar .span{font-size:6.5pt;font-weight:700;color:var(--muted);margin-left:.8mm;white-space:nowrap}
+.bar .dd{font-size:6.3pt;font-weight:900;color:#fff;background:var(--wine);border-radius:99px;padding:.1mm 1.4mm;margin-left:1mm;white-space:nowrap;vertical-align:.2mm}
+.bar .dd.past{background:#9AA3B0}
+body.exporting .bar .dd{display:none}
 
 /* ───── 모바일 달력 ───── */
 .mobile{display:none;max-width:560px;margin:0 auto;flex-direction:column;gap:14px}
@@ -160,12 +167,10 @@ body.exporting .day.today.csat .num{color:var(--orange-dark);font-size:13pt}
 .chip.cl{border-top-left-radius:0;border-bottom-left-radius:0;border-left-style:dashed}
 .chip.cr{border-top-right-radius:0;border-bottom-right-radius:0;border-right-style:dashed}
 .mcell .plus{font-size:9px;font-weight:900;color:var(--navy)}
-.mcell.today .n{background:var(--navy);color:#fff;border-radius:99px;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:11px}
-.mcell.today.sun .n,.mcell.today.hol .n{background:var(--sun)}
-.mcell.today.sat .n{background:var(--sat)}
-.mcell.today.csat .n{background:var(--orange-dark)}
+.mcell.today .n{background:var(--wine);color:#fff;border-radius:99px;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:11px}
+.mcell.today.sun .n,.mcell.today.hol .n,.mcell.today.sat .n,.mcell.today.csat .n{background:var(--wine);color:#fff}
 .mcell .tbadge{display:none}   /* 모바일은 칸이 좁아 날짜 원형 표시만 사용 */
-.mlegend i.today{background:var(--navy);border-radius:50%}
+.mlegend i.today{background:var(--wine);border-radius:50%}
 .mlegend{display:flex;flex-wrap:wrap;gap:6px 12px;padding:8px 12px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);background:#fff}
 .mlegend span{display:inline-flex;align-items:center;gap:4px}
 .mlegend i{width:12px;height:12px;border-radius:3px;display:inline-block}
@@ -205,6 +210,7 @@ body.exporting .day.today.csat .num{color:var(--orange-dark);font-size:13pt}
 .bsheet li .txt b{color:var(--navy);margin-right:5px}
 .bsheet li.mine .txt b{color:var(--pink-dark)}
 .bsheet li .txt small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.bsheet li .dday{flex:none}
 .bsheet .none{padding:18px 14px 22px;color:var(--muted);font-size:13.5px;text-align:center}
 
 #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--navy-dark);color:#fff;padding:10px 18px;border-radius:12px;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:60;max-width:92vw;text-align:center}
@@ -223,7 +229,7 @@ body.exporting .day.today.csat .num{color:var(--orange-dark);font-size:13pt}
   .sheet{box-shadow:none;margin:0;transform:none!important;background:#fff}
   .day:hover,.day.off:hover{background:inherit}
   .bar:hover{background:var(--ivory)}
-  .tbadge{display:none}
+  .tbadge,.bar .dd{display:none}
   .day.today .num{top:1.2mm;left:1.8mm;background:none;color:var(--navy);min-width:0;height:auto;padding:0;display:block;font-size:11pt}
   .day.today.sun .num,.day.today.hol .num{color:var(--sun)}
   .day.today.sat .num{color:var(--sat)}
@@ -413,6 +419,14 @@ const dayClasses = (d, k) => {
   return `${dow===0?' sun':dow===6?' sat':''}${hol?' hol':''}${(dow===0||dow===6||hol)?' off':''}${ev?' '+ev.kind:''}${mine?' mine':''}${k===TODAY?' today':''}`;
 };
 const todayBadge = k => k===TODAY ? `<span class="tbadge">TODAY</span>` : '';
+// D-day: 시작일 기준. 기간 중이면 'D-DAY', 지났으면 종료일 기준 D+n
+function dday(e){
+  const t = fromISO(TODAY), s = fromISO(e.start), en = fromISO(e.end);
+  if (t < s) return {n: Math.round((s - t)/86400000), text: `D-${Math.round((s - t)/86400000)}`, cls: (s - t)/86400000 <= 3 ? 'soon' : ''};
+  if (t <= en) return {n: 0, text: 'D-DAY', cls: 'now'};
+  const p = Math.round((t - en)/86400000); return {n: -p, text: `D+${p}`, cls: 'past'};
+}
+const ddayHtml = (e, cls='dday') => { const d = dday(e); return `<span class="${cls} ${d.cls}">${d.text}</span>`; };
 function renderMonth(m){
   const {first, last, weeks} = monthWeeks(m);
   const weeksHtml = weeks.map(days => {
@@ -425,7 +439,7 @@ function renderMonth(m){
     }).join('');
     const bars = weekSegments(days, first, last).map(sg => {
       const e = sg.e, multi = e.start !== e.end;
-      return `<div class="bar${sg.contL?' cont-l':''}${sg.contR?' cont-r':''}${isMine(e)?' mine':''}" data-id="${esc(e.id)}" data-lane="${sg.lane}" data-c0="${sg.c0}" data-n="${sg.c1-sg.c0+1}" style="left:calc(${sg.c0}*100%/7 + 1mm);width:calc(${sg.c1-sg.c0+1}*100%/7 - 2mm)" title="${esc(e.univ)} ${esc(e.names.join(', '))} (${e.start}${multi?' ~ '+e.end:''})"><b>${esc(e.univ)}</b>${esc(e.names.join(', '))}${multi?`<span class="span">${fmtMD(e.start)}~${fmtMD(e.end)}</span>`:''}</div>`;
+      return `<div class="bar${sg.contL?' cont-l':''}${sg.contR?' cont-r':''}${isMine(e)?' mine':''}" data-id="${esc(e.id)}" data-lane="${sg.lane}" data-c0="${sg.c0}" data-n="${sg.c1-sg.c0+1}" style="left:calc(${sg.c0}*100%/7 + 1mm);width:calc(${sg.c1-sg.c0+1}*100%/7 - 2mm)" title="${esc(e.univ)} ${esc(e.names.join(', '))} (${e.start}${multi?' ~ '+e.end:''})"><b>${esc(e.univ)}</b>${esc(e.names.join(', '))}${multi?`<span class="span">${fmtMD(e.start)}~${fmtMD(e.end)}</span>`:''}${isMine(e)?ddayHtml(e,'dd'):''}</div>`;
     }).join('');
     return `<div class="week">${cells}<div class="lanes">${bars}</div></div>`;
   }).join('');
@@ -457,7 +471,7 @@ function renderMine(){
   const list = sorted().filter(isMine);
   $('mineTitle').innerHTML = `${esc(me)}의 면접/실기 일정 <small>${list.length}건</small>`;
   $('mineBody').innerHTML = list.length
-    ? `<ul>${list.map(e => `<li><span class="d">${fmtMDW(e.start)}${e.end!==e.start?'~'+fmtMDW(e.end):''}</span><span class="u">${esc(e.univ)}</span>${e.names.length>1?`<span class="n">외 ${e.names.length-1}명 함께</span>`:''}</li>`).join('')}</ul>`
+    ? `<ul>${list.map(e => `<li><span class="d">${fmtMDW(e.start)}${e.end!==e.start?'~'+fmtMDW(e.end):''}</span><span class="u">${esc(e.univ)}</span>${e.names.length>1?`<span class="n">외 ${e.names.length-1}명 함께</span>`:''}${ddayHtml(e)}</li>`).join('')}</ul>`
     : `<div class="none">등록된 일정이 없습니다. 조사 폼에 응답했는지 확인하거나 담임 선생님께 알려 주세요.</div>`;
   panel.classList.add('show');
 }
@@ -516,7 +530,7 @@ function openDay(k){
   const list = sorted().filter(e => e.start <= k && e.end >= k);
   $('dayTitle').innerHTML = `${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})${hol?`<span class="tag hol">${hol}</span>`:''}${ev?`<span class="tag ${ev.kind}">${ev.label}</span>`:''}<button class="x" data-close="dayOv" aria-label="닫기">×</button>`;
   $('dayBody').innerHTML = list.length
-    ? `<ul>${list.map(e => `<li class="${isMine(e)?'mine':''}"><div class="txt"><b>${esc(e.univ)}</b>${esc(e.names.join(', '))}${e.start!==e.end?`<small>${fmtMDW(e.start)} ~ ${fmtMDW(e.end)}</small>`:''}</div></li>`).join('')}</ul>`
+    ? `<ul>${list.map(e => `<li class="${isMine(e)?'mine':''}"><div class="txt"><b>${esc(e.univ)}</b>${esc(e.names.join(', '))}${e.start!==e.end?`<small>${fmtMDW(e.start)} ~ ${fmtMDW(e.end)}</small>`:''}</div>${isMine(e)?ddayHtml(e):''}</li>`).join('')}</ul>`
     : `<div class="none">이 날짜에 등록된 면접/실기 일정이 없습니다.</div>`;
   $('dayOv').classList.add('show');
 }
