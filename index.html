@@ -16,6 +16,7 @@
   --orange:#F26B1D; --orange-dark:#C4500C; --orange-soft:#FFEEDD;
   --pink:#E8447A; --pink-dark:#B82559; --pink-soft:#FDE7EF;
   --wine:#7B1E3C;
+  --silgi:#FCE4EC; --silgi-2:#F8D2DF; --weekend:#F3F4F6; --weekend-2:#E9EBEF;
   --bw:.7mm; --shadow:0 12px 36px rgba(31,78,140,.16); --s:1;
 }
 *{box-sizing:border-box}
@@ -77,9 +78,9 @@ b{font-weight:900}
 
 /* ───── A4 가로 시트 (데스크톱 · 인쇄 · 이미지) ───── */
 .pages{display:flex;flex-direction:column;align-items:center;gap:calc(28px * var(--s))}
-.pagewrap{width:calc(277mm * var(--s));height:calc(190mm * var(--s));flex:none}
+.pagewrap{width:calc(277mm * var(--s));height:calc(190mm * var(--s));flex:none}   /* 높이는 layoutBars에서 시트 실제 높이로 다시 맞춤 */
 .pagewrap .sheet{transform:scale(var(--s));transform-origin:top left}
-.sheet{width:277mm;height:190mm;background:var(--sky);border:2.6mm solid var(--navy);border-radius:5mm;padding:4mm 6mm 5mm;box-shadow:var(--shadow);position:relative;display:flex;flex-direction:column;overflow:hidden}
+.sheet{width:277mm;min-height:190mm;background:var(--sky);border:2.6mm solid var(--navy);border-radius:5mm;padding:4mm 6mm 5mm;box-shadow:var(--shadow);position:relative;display:flex;flex-direction:column;overflow:hidden}
 .head{display:flex;align-items:center;gap:4mm;padding-bottom:2.5mm;border-bottom:.8mm solid var(--navy);flex:none}
 .head img{width:14mm;height:14mm;border-radius:50%;box-shadow:0 .6mm 1.6mm rgba(0,0,0,.18);flex:none}
 .head .t{flex:1;min-width:0}
@@ -94,13 +95,13 @@ b{font-weight:900}
 .dow{display:grid;grid-template-columns:repeat(7,1fr);background:var(--navy);flex:none}
 .dow div{color:#fff;text-align:center;font-size:10pt;font-weight:900;padding:1.6mm 0;letter-spacing:.12em}
 .dow div.sun{color:#FFD2CC}.dow div.sat{color:#CFE3FF}
-.week{position:relative;display:grid;grid-template-columns:repeat(7,1fr);flex:1;min-height:0;border-top:.3mm solid var(--line)}
+.week{position:relative;display:grid;grid-template-columns:repeat(7,1fr);flex:1 0 auto;min-height:0;border-top:.3mm solid var(--line)}
 .week:first-of-type{border-top:0}
 .day{position:relative;border-left:.3mm solid var(--line);background:#fff;cursor:pointer;min-height:0}
 .day:first-child{border-left:0}
 .day:hover{background:var(--navy-soft)}
-.day.off{background:var(--ivory)}
-.day.off:hover{background:var(--ivory-2)}
+.day.off{background:var(--weekend)}
+.day.off:hover{background:var(--weekend-2)}
 .day.empty{background:var(--sky-2);cursor:default}
 .day .num{position:absolute;top:1.2mm;left:1.8mm;font-size:11pt;font-weight:900;color:var(--navy);line-height:1}
 .day.sun .num{color:var(--sun)}.day.sat .num{color:var(--sat)}
@@ -126,11 +127,13 @@ body.exporting .day.today.sun .num,body.exporting .day.today.hol .num{color:var(
 body.exporting .day.today.sat .num{color:var(--sat)}
 body.exporting .day.today.csat .num{color:var(--orange-dark);font-size:13pt}
 .day .more{position:absolute;right:1.5mm;bottom:1mm;font-size:7pt;font-weight:900;color:var(--navy);background:var(--ivory);border:.25mm solid var(--navy);border-radius:99px;padding:.2mm 1.6mm}
-.lanes{position:absolute;left:0;right:0;top:6.5mm;bottom:1mm;pointer-events:none;overflow:hidden}
+.lanes{position:absolute;left:0;right:0;top:6.5mm;bottom:1mm;pointer-events:none}
 .bar{position:absolute;pointer-events:auto;cursor:pointer;background:var(--ivory);border:.3mm solid var(--navy);border-radius:1.6mm;padding:.6mm 1.6mm;font-size:7.6pt;line-height:1.28;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all;overflow-wrap:anywhere;box-shadow:0 .3mm .8mm rgba(31,78,140,.10)}
 .bar b{color:var(--navy);margin-right:.8mm}
 .bar:hover{background:var(--ivory-2);border-color:var(--navy-dark)}
-.bar.mine{background:var(--pink-soft);border:var(--bw) solid var(--pink);padding:calc(.6mm - .4mm) calc(1.6mm - .4mm)}
+.bar.silgi{background:var(--silgi)}
+.bar.silgi:hover{background:var(--silgi-2)}
+.bar.mine{border:var(--bw) solid var(--pink);padding:calc(.6mm - .4mm) calc(1.6mm - .4mm)}
 .bar.mine b{color:var(--pink-dark)}
 .bar.cont-l{border-top-left-radius:0;border-bottom-left-radius:0;border-left-style:dashed}
 .bar.cont-r{border-top-right-radius:0;border-bottom-right-radius:0;border-right-style:dashed}
@@ -156,7 +159,7 @@ body.exporting .bar .dd{display:none}
 .mcell{min-height:64px;min-width:0;overflow:hidden;border-top:1px solid var(--line);border-left:1px solid var(--line);padding:3px 3px 4px;position:relative;background:#fff;cursor:pointer;display:flex;flex-direction:column;gap:2px}
 .mcell:nth-child(7n+1){border-left:0}
 .mcell.empty{background:var(--sky-2);cursor:default}
-.mcell.off{background:var(--ivory)}
+.mcell.off{background:var(--weekend)}
 .mcell .n{font-size:12px;font-weight:900;color:var(--navy);line-height:1}
 .mcell.sun .n,.mcell.hol .n{color:var(--sun)}.mcell.sat .n{color:var(--sat)}
 .mcell .lb{font-size:8.5px;font-weight:900;line-height:1.15;color:var(--sun);white-space:nowrap;overflow:hidden;max-width:100%;word-break:keep-all}
@@ -170,7 +173,8 @@ body.exporting .bar .dd{display:none}
 .mcell.mine{box-shadow:inset 0 0 0 2.5px var(--pink)}
 .mcell.csat.mine{box-shadow:inset 0 0 0 2.5px var(--pink),inset 0 0 0 5px var(--orange)}
 .chip{font-size:9.5px;font-weight:900;color:var(--navy);background:var(--ivory);border:1px solid var(--navy);border-radius:4px;padding:1px 3px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chip.mine{background:var(--pink-soft);border:2px solid var(--pink);color:var(--pink-dark);padding:0 2px}
+.chip.silgi{background:var(--silgi)}
+.chip.mine{border:2px solid var(--pink);color:var(--pink-dark);padding:0 2px}
 .chip.cl{border-top-left-radius:0;border-bottom-left-radius:0;border-left-style:dashed}
 .chip.cr{border-top-right-radius:0;border-bottom-right-radius:0;border-right-style:dashed}
 .mcell .plus{font-size:9px;font-weight:900;color:var(--navy)}
@@ -218,7 +222,8 @@ body.exporting .bar .dd{display:none}
 .bsheet h3 .x{margin-left:auto;border:0;background:transparent;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;padding:2px 6px}
 .bsheet ul{list-style:none;margin:0;padding:10px 14px 16px;display:grid;gap:8px}
 .bsheet li{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--ivory);border:1.5px solid var(--navy);border-radius:10px;font-size:14px;line-height:1.35}
-.bsheet li.mine{background:var(--pink-soft);border:2.5px solid var(--pink)}
+.bsheet li.silgi{background:var(--silgi)}
+.bsheet li.mine{border:2.5px solid var(--pink)}
 .bsheet li .txt{flex:1;min-width:0}
 .bsheet li .txt b{color:var(--navy);margin-right:5px}
 .bsheet li.mine .txt b{color:var(--pink-dark)}
@@ -237,11 +242,13 @@ body.exporting .bar .dd{display:none}
   .topbar,.tools,.notice,.mine-panel,.mobile,#toast,.overlay,.busy{display:none!important}
   :root{--s:1!important}
   .pages{position:static!important;gap:0;display:block}
-  .pagewrap{width:277mm;height:190mm;page-break-after:always;break-after:page}
+  .pagewrap{width:277mm;height:190mm!important;overflow:hidden;page-break-after:always;break-after:page}
+  .sheet{zoom:var(--pz,1)}
   .pagewrap:last-child{page-break-after:auto;break-after:auto}
   .sheet{box-shadow:none;margin:0;transform:none!important;background:#fff}
   .day:hover,.day.off:hover{background:inherit}
   .bar:hover{background:var(--ivory)}
+  .bar.silgi:hover{background:var(--silgi)}
   .tbadge,.bar .dd{display:none}
   .day.today .num{top:1.2mm;left:1.8mm;background:none;color:var(--navy);min-width:0;height:auto;padding:0;display:block;font-size:11pt}
   .day.today.sun .num,.day.today.hol .num{color:var(--sun)}
@@ -375,15 +382,16 @@ function rowsToEntries(rows, label){
       const range = parseDateRange(r[st.s]);
       if (!range) { bad.push(`${name} · ${univ} · "${r[st.s]||'(비어 있음)'}"`); return; }
       if (st.e >= 0) { const er = parseDateRange(r[st.e]); if (er && er.end > range.end) range.end = er.end; }
-      out.push({univ, name, start:range.start, end:range.end});
+      const kind = /실기|실적|예체능/.test(r.join(' ')) ? 'silgi' : 'interview';
+      out.push({univ, name, start:range.start, end:range.end, kind});
     });
   });
   return {out, bad};
 }
 function mergeEntries(list){
   const map = new Map();
-  list.forEach(x => { const k = `${x.univ.replace(/\s+/g,'')}|${x.start}|${x.end}`;
-    if (!map.has(k)) map.set(k, {id:k, univ:x.univ, names:[], start:x.start, end:x.end});
+  list.forEach(x => { const k = `${x.univ.replace(/\s+/g,'')}|${x.start}|${x.end}|${x.kind||''}`;
+    if (!map.has(k)) map.set(k, {id:k, univ:x.univ, names:[], start:x.start, end:x.end, kind:x.kind||'interview'});
     const e = map.get(k); if (!e.names.includes(x.name)) e.names.push(x.name); });
   return [...map.values()];
 }
@@ -455,7 +463,7 @@ function renderMonth(m){
     }).join('');
     const bars = weekSegments(days, first, last).map(sg => {
       const e = sg.e, multi = e.start !== e.end;
-      return `<div class="bar${sg.contL?' cont-l':''}${sg.contR?' cont-r':''}${isMine(e)?' mine':''}" data-id="${esc(e.id)}" data-lane="${sg.lane}" data-c0="${sg.c0}" data-n="${sg.c1-sg.c0+1}" style="left:calc(${sg.c0}*100%/7 + 1mm);width:calc(${sg.c1-sg.c0+1}*100%/7 - 2mm)" title="${esc(e.univ)} ${esc(e.names.join(', '))} (${e.start}${multi?' ~ '+e.end:''})"><b>${esc(e.univ)}</b>${esc(e.names.join(', '))}${multi?`<span class="span">${fmtMD(e.start)}~${fmtMD(e.end)}</span>`:''}${isMine(e)?ddayHtml(e,'dd'):''}</div>`;
+      return `<div class="bar ${e.kind==='silgi'?'silgi':''}${sg.contL?' cont-l':''}${sg.contR?' cont-r':''}${isMine(e)?' mine':''}" data-id="${esc(e.id)}" data-lane="${sg.lane}" data-c0="${sg.c0}" data-n="${sg.c1-sg.c0+1}" style="left:calc(${sg.c0}*100%/7 + 1mm);width:calc(${sg.c1-sg.c0+1}*100%/7 - 2mm)" title="${esc(e.univ)} ${esc(e.names.join(', '))} (${e.start}${multi?' ~ '+e.end:''})"><b>${esc(e.univ)}</b>${esc(e.names.join(', '))}${multi?`<span class="span">${fmtMD(e.start)}~${fmtMD(e.end)}</span>`:''}${isMine(e)?ddayHtml(e,'dd'):''}</div>`;
     }).join('');
     return `<div class="week">${cells}<div class="lanes">${bars}</div></div>`;
   }).join('');
@@ -471,14 +479,14 @@ function renderMobileMonth(m){
     const k = iso(d), hol = HOLIDAYS[k], ev = EVENTS[k];
     const label = hol ? `<span class="lb">${hol}</span>` : ev ? `<span class="lb ${ev.kind}">${ev.label.replace('대학수학능력시험','수능')}</span>` : '';
     const list = sorted().filter(e => e.start <= k && e.end >= k);
-    const chips = list.slice(0,3).map(e => `<div class="chip${isMine(e)?' mine':''}${e.start<k?' cl':''}${e.end>k?' cr':''}">${esc(e.univ)}</div>`).join('') + (list.length>3?`<span class="plus">+${list.length-3}</span>`:'');
+    const chips = list.slice(0,3).map(e => `<div class="chip${e.kind==='silgi'?' silgi':''}${isMine(e)?' mine':''}${e.start<k?' cl':''}${e.end>k?' cr':''}">${esc(e.univ)}</div>`).join('') + (list.length>3?`<span class="plus">+${list.length-3}</span>`:'');
     return `<div class="mcell${dayClasses(d,k)}" data-date="${k}"><div class="n">${d.getDate()}</div>${label}${chips}${todayBadge(k)}</div>`;
   }).join('')).join('');
   return `<section class="mcard" id="mm${m}">
     <div class="mhead"><img src="${LOGO}" alt=""><div class="t"><div class="e">SANNAM HIGH SCHOOL · 3학년 3반</div><h2>수시 면접/실기 일정 달력</h2></div><div class="mo">${m}<small>월</small></div></div>
     <div class="mdow">${DOW.map((d,i)=>`<div class="${i===0?'sun':i===6?'sat':''}">${d}</div>`).join('')}</div>
     <div class="mgrid">${cells}</div>
-    <div class="mlegend"><span><i style="background:var(--ivory);border:1px solid var(--navy)"></i>일정 (누르면 자세히)</span><span><i style="background:var(--pink-soft);border:2px solid var(--pink)"></i>내 일정</span><span><i style="background:var(--orange-soft);border:2px solid var(--orange)"></i>수능</span><span><i class="today"></i>오늘</span></div>
+    <div class="mlegend"><span><i style="background:var(--ivory);border:1px solid var(--navy)"></i>면접</span><span><i style="background:var(--silgi);border:1px solid var(--navy)"></i>실기</span><span><i style="background:var(--pink-soft);border:2px solid var(--pink)"></i>내 일정</span><span><i style="background:var(--orange-soft);border:2px solid var(--orange)"></i>수능</span><span><i class="today"></i>오늘</span></div>
   </section>`;
 }
 function renderMine(){
@@ -510,11 +518,16 @@ function layoutBars(){
     const h = {}; bars.forEach(b => { const l=+b.dataset.lane; h[l]=Math.max(h[l]||0, b.offsetHeight); });
     const tops = {}; let acc = 0;
     Object.keys(h).map(Number).sort((a,b)=>a-b).forEach(l => { tops[l]=acc; acc += h[l]+2; });
-    const avail = lanesEl.clientHeight, hiddenByCol = Array(7).fill(0);
-    bars.forEach(b => { const l=+b.dataset.lane; b.style.top = tops[l]+'px';
-      if (tops[l] + b.offsetHeight > avail) { b.style.visibility='hidden'; const s=+b.dataset.c0, n=+b.dataset.n; for (let c=s;c<s+n;c++) hiddenByCol[c]++; } });
-    hiddenByCol.forEach((n,c) => { if (n) { const cell = week.children[c]; if (cell && !cell.classList.contains('empty')) cell.insertAdjacentHTML('beforeend', `<span class="more">+${n}</span>`); } });
+    bars.forEach(b => { const l=+b.dataset.lane; b.style.top = tops[l]+'px'; });
+    // 막대가 모두 들어가도록 이 주의 칸 높이를 늘림 (6.5mm 위 여백 + 막대들 + 아래 여백)
+    week.style.minHeight = `calc(6.5mm + ${acc + 4}px)`;
   });
+  fitSheets();
+}
+function fitSheets(){
+  document.querySelectorAll('.week').forEach(w => { if (!w.querySelector('.bar')) w.style.minHeight=''; });
+  const s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s')) || 1;
+  document.querySelectorAll('.pagewrap').forEach(pw => { const sh = pw.querySelector('.sheet'); pw.style.height = (sh.offsetHeight * s) + 'px'; });
 }
 function fitLabels(){
   document.querySelectorAll('.mcell .lb').forEach(el => {
@@ -532,8 +545,10 @@ function fitScale(){
   document.documentElement.style.setProperty('--s', s.toFixed(4));
 }
 window.addEventListener('resize', () => { fitScale(); layoutBars(); fitLabels(); });
-window.addEventListener('beforeprint', () => { document.documentElement.style.setProperty('--s','1'); layoutBars(); });
-window.addEventListener('afterprint', () => { fitScale(); layoutBars(); });
+const PX_PER_MM = 96/25.4;
+window.addEventListener('beforeprint', () => { document.documentElement.style.setProperty('--s','1'); layoutBars();
+  document.querySelectorAll('.sheet').forEach(sh => { const z = Math.min(1, 190*PX_PER_MM / sh.offsetHeight); sh.style.setProperty('--pz', z.toFixed(4)); }); });
+window.addEventListener('afterprint', () => { document.querySelectorAll('.sheet').forEach(sh => sh.style.removeProperty('--pz')); fitScale(); layoutBars(); });
 if (document.fonts) document.fonts.ready.then(() => { layoutBars(); fitLabels(); });
 
 /* ═══════════ 학생 선택 · 날짜 보기 ═══════════ */
@@ -546,7 +561,7 @@ function openDay(k){
   const list = sorted().filter(e => e.start <= k && e.end >= k);
   $('dayTitle').innerHTML = `${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})${hol?`<span class="tag hol">${hol}</span>`:''}${ev?`<span class="tag ${ev.kind}">${ev.label}</span>`:''}<button class="x" data-close="dayOv" aria-label="닫기">×</button>`;
   $('dayBody').innerHTML = list.length
-    ? `<ul>${list.map(e => `<li class="${isMine(e)?'mine':''}"><div class="txt"><b>${esc(e.univ)}</b>${esc(e.names.join(', '))}${e.start!==e.end?`<small>${fmtMDW(e.start)} ~ ${fmtMDW(e.end)}</small>`:''}</div>${isMine(e)?ddayHtml(e):''}</li>`).join('')}</ul>`
+    ? `<ul>${list.map(e => `<li class="${e.kind==='silgi'?'silgi ':''}${isMine(e)?'mine':''}"><div class="txt"><b>${esc(e.univ)}</b>${esc(e.names.join(', '))}${e.start!==e.end?`<small>${fmtMDW(e.start)} ~ ${fmtMDW(e.end)}</small>`:''}</div>${isMine(e)?ddayHtml(e):''}</li>`).join('')}</ul>`
     : `<div class="none">이 날짜에 등록된 면접/실기 일정이 없습니다.</div>`;
   $('dayOv').classList.add('show');
 }
