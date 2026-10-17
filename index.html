@@ -102,6 +102,21 @@ body.has-alerts .pages{padding-left:256px}
   body.has-alerts .pages{padding-left:0}
   .alerts ul{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 }
+/* ───── 학과 · 합격발표 ───── */
+.bar .dp{font-size:6.6pt;font-weight:700;color:var(--muted);margin-left:.5mm}
+.bar.result{background:#E8F5EC;border-color:var(--green,#2E7D46)}
+.bar.result:hover{background:#D5EDDC}
+.bar.result b{color:#1E5A31}
+.chip.result{background:#E8F5EC;border-color:#2E7D46;color:#1E5A31}
+.bsheet li.result{background:#E8F5EC;border-color:#2E7D46}
+.bsheet li .txt .dp{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:1px 0 0}
+.bsheet li .txt .ann{display:block;font-size:12px;font-weight:800;color:#1E5A31;margin-top:2px}
+.mine-panel li.result{background:#E8F5EC}
+.mine-panel li.result .d{color:#1E5A31}
+.mine-panel li .rtag{font-size:10.5px;font-weight:900;color:#fff;background:#2E7D46;border-radius:99px;padding:1px 7px;margin-right:4px}
+.alerts .ann{grid-column:1/-1;font-size:11.5px;font-weight:700;color:#1E5A31}
+.togg{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--navy);padding:8px 11px;background:#fff;border:1px solid var(--sky-line);border-radius:10px;cursor:pointer;white-space:nowrap;user-select:none}
+.togg input{accent-color:#2E7D46}
 /* ───── A4 가로 시트 (데스크톱 · 인쇄 · 이미지) ───── */
 .pages{display:flex;flex-direction:column;align-items:center;gap:calc(28px * var(--s))}
 .pagewrap{width:calc(277mm * var(--s));height:calc(190mm * var(--s));flex:none}   /* 높이는 layoutBars에서 시트 실제 높이로 다시 맞춤 */
@@ -312,6 +327,7 @@ body.exporting .bar .dd{display:none}
   </span>
   <button class="btn primary" id="btnPrint">🖨 인쇄</button>
   <button class="btn" id="btnReload" title="최신 일정을 다시 불러옵니다">🔄 새로고침</button>
+  <label class="togg" title="합격자 발표일을 달력에 초록색으로 표시"><input type="checkbox" id="chkResult" checked>📢 합격 발표일</label>
   <button class="btn" id="btnEdit" title="담임 선생님용: 일정 추가·수정·삭제">✏️ 일정 편집</button>
   <span class="spacer"></span>
   <span class="status" id="status">일정을 불러오는 중…</span>
@@ -350,6 +366,7 @@ body.exporting .bar .dd{display:none}
     <label>대학(전형) <input id="edUniv" placeholder="예: 서원대(창의면접)"></label>
     <div class="kinds"><label><input type="radio" name="edKind" value="interview" checked> 면접 (연노랑)</label><label><input type="radio" name="edKind" value="silgi"> 실기 (연핑크)</label></div>
     <div class="row2"><label>시작일 <input type="date" id="edStart"></label><label>종료일 <span class="hint" style="display:inline">(하루면 비움)</span><input type="date" id="edEnd"></label></div>
+    <div class="row2"><label>학과 <input id="edDept" placeholder="예: 웹툰콘텐츠학과"></label><label>합격 발표일 <span class="hint" style="display:inline">(모르면 비움)</span><input type="date" id="edAnn"></label></div>
     <label>학생 <span class="hint" style="display:inline">(여러 명 선택 가능)</span></label>
     <div class="namepick" id="edNames"></div>
   </div>
@@ -406,7 +423,18 @@ const fmtMD = s => { const d=fromISO(s); return `${d.getMonth()+1}/${d.getDate()
 const fmtMDW = s => { const d=fromISO(s); return `${d.getMonth()+1}/${d.getDate()}(${DOW[d.getDay()]})`; };
 const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const isMine = e => !!me && e.names.includes(me);
-const sorted = () => entries.slice().sort((a,b)=> a.start.localeCompare(b.start) || a.univ.localeCompare(b.univ,'ko'));
+let showResult = true; try { showResult = localStorage.getItem('interviewCal-3-3-showresult') !== '0'; } catch(e){}
+const vis = () => showResult ? entries : entries.filter(e => e.kind !== 'result');
+const deptOfName = (e, n) => (e.details && e.details[n] && e.details[n].dept) || '';
+const annOfName = (e, n) => (e.details && e.details[n] && e.details[n].ann) || '';
+// 같은 학과끼리 묶어서: "권예진, 나예진 웹툰콘텐츠학과 / 문나경 패션의류학과"
+function namesHtml(e, cls='dp'){
+  const groups = new Map();
+  e.names.forEach(n => { const d = deptOfName(e, n); if (!groups.has(d)) groups.set(d, []); groups.get(d).push(n); });
+  return [...groups].map(([d, ns]) => esc(ns.join(', ')) + (d ? ` <span class="${cls}">${esc(d)}</span>` : '')).join(' / ');
+}
+const namesPlain = e => { const g = new Map(); e.names.forEach(n => { const d = deptOfName(e,n); if(!g.has(d)) g.set(d,[]); g.get(d).push(n); }); return [...g].map(([d,ns]) => ns.join(', ') + (d?` (${d})`:'')).join(' / '); };
+const sorted = () => vis().slice().sort((a,b)=> a.start.localeCompare(b.start) || a.univ.localeCompare(b.univ,'ko'));
 
 /* ═══════════ 구글 시트(CSV) 읽기 ═══════════ */
 function parseCsv(text){
@@ -450,7 +478,9 @@ function rowsToEntries(rows, label, src){
   const hi = rows.findIndex(r => r.some(v => /이름|성명/.test(v)));
   if (hi < 0) { bad.push(`[${label}] '이름' 열이 있는 머리글을 찾지 못했습니다`); return {out, bad}; }
   const {nameIdx, sets} = detectColumns(rows[hi]);
-  const detIdx = rows[hi].findIndex(c => /지원 전형|학과/.test(String(c||'')));
+  const H = rows[hi].map(c => String(c||''));
+  const detIdx = H.findIndex(c => /지원 전형/.test(c));
+  const deptIdx = H.findIndex(c => /^학과$/.test(c)), annIdx = H.findIndex(c => /^발표일$/.test(c)), kindIdx = H.findIndex(c => /^구분$/.test(c));
   if (nameIdx==null || !sets.length) { bad.push(`[${label}] 이름·대학·면접일 열을 찾지 못했습니다 (머리글: ${rows[hi].join(' | ')})`); return {out, bad}; }
   rows.slice(hi+1).forEach(r => {
     const name = String(r[nameIdx]||'').replace(/\s+/g,''); if (!name) return;
@@ -459,8 +489,12 @@ function rowsToEntries(rows, label, src){
       const range = parseDateRange(r[st.s]);
       if (!range) { bad.push(`${name} · ${univ} · "${r[st.s]||'(비어 있음)'}"`); return; }
       if (st.e >= 0) { const er = parseDateRange(r[st.e]); if (er && er.end > range.end) range.end = er.end; }
-      const kind = /실기|실적|예체능/.test(r.join(' ')) ? 'silgi' : 'interview';
-      out.push({univ, name, start:range.start, end:range.end, kind, src, detail: detIdx>=0 ? String(r[detIdx]||'') : ''});
+      const kv = kindIdx>=0 ? String(r[kindIdx]||'').trim() : '';
+      const kind = kv==='실기' ? 'silgi' : kv==='면접' ? 'interview' : (/실기|실적|예체능/.test(r.join(' ')) ? 'silgi' : 'interview');
+      let dept = deptIdx>=0 ? String(r[deptIdx]||'').trim() : '';
+      if (!dept && detIdx>=0) { const m = String(r[detIdx]||'').match(/^\S+\s+(.*?)\s+\(/); if (m) dept = m[1].trim(); }
+      let announce = ''; if (annIdx>=0 && r[annIdx]) { const a = parseDateRange(r[annIdx]); if (a && a.start > range.end) announce = a.start; }
+      out.push({univ, name, start:range.start, end:range.end, kind, src, dept, announce});
     });
   });
   return {out, bad};
@@ -470,8 +504,14 @@ function mergeEntries(list){
   list.forEach(x => { const k = `${x.univ.replace(/\s+/g,'')}|${x.start}|${x.end}|${x.kind||''}`;
     if (!map.has(k)) map.set(k, {id:k, univ:x.univ, names:[], start:x.start, end:x.end, kind:x.kind||'interview', editable:true});
     if (x.src !== 'main') map.get(k).editable = false;
-    (map.get(k).details ||= {})[x.name] = x.detail || '';
-    const e = map.get(k); if (!e.names.includes(x.name)) e.names.push(x.name); });
+    const e = map.get(k); (e.details ||= {})[x.name] = {dept: x.dept || '', ann: x.announce || ''};
+    if (!e.names.includes(x.name)) e.names.push(x.name);
+    if (x.announce) {   // 합격자 발표일 → 별도 일정(초록)
+      const rk = `R|${x.univ.replace(/\s+/g,'')}|${x.announce}`;
+      if (!map.has(rk)) map.set(rk, {id:rk, univ:x.univ, names:[], start:x.announce, end:x.announce, kind:'result', editable:false, details:{}});
+      const re_ = map.get(rk); re_.details[x.name] = {dept: x.dept || '', ann: ''};
+      if (!re_.names.includes(x.name)) re_.names.push(x.name);
+    } });
   return [...map.values()];
 }
 async function fetchCsv(url){
@@ -515,7 +555,7 @@ function monthWeeks(m){
 function weekSegments(days, first, last){
   const ms = iso(first), me_ = iso(last);
   const ws = iso(days[0]) < ms ? ms : iso(days[0]), we = iso(days[6]) > me_ ? me_ : iso(days[6]);
-  const segs = entries.filter(e => e.start <= we && e.end >= ws).map(e => {
+  const segs = vis().filter(e => e.start <= we && e.end >= ws).map(e => {
     const s = e.start < ws ? ws : e.start, t = e.end > we ? we : e.end;
     return {e, c0: fromISO(s).getDay(), c1: fromISO(t).getDay(), contL: e.start < s, contR: e.end > t};
   }).sort((a,b) => a.c0-b.c0 || (b.c1-b.c0)-(a.c1-a.c0) || a.e.univ.localeCompare(b.e.univ,'ko'));
@@ -525,7 +565,7 @@ function weekSegments(days, first, last){
 let TODAY = iso(new Date());
 const dayClasses = (d, k) => {
   const dow = d.getDay(), hol = HOLIDAYS[k], ev = EVENTS[k];
-  const mine = !!me && entries.some(e => isMine(e) && e.start <= k && e.end >= k);
+  const mine = !!me && vis().some(e => isMine(e) && e.start <= k && e.end >= k);
   return `${dow===0?' sun':dow===6?' sat':''}${hol?' hol':''}${(dow===0||dow===6||hol)?' off':''}${ev?' '+ev.kind:''}${mine?' mine':''}${k===TODAY?' today':''}`;
 };
 const todayBadge = k => k===TODAY ? `<span class="tbadge">TODAY</span>` : '';
@@ -550,7 +590,7 @@ function renderMonth(m){
     }).join('');
     const bars = weekSegments(days, first, last).map(sg => {
       const e = sg.e, multi = e.start !== e.end;
-      return `<div class="bar ${e.kind==='silgi'?'silgi':''}${sg.contL?' cont-l':''}${sg.contR?' cont-r':''}${isMine(e)?' mine':''}" data-id="${esc(e.id)}" data-lane="${sg.lane}" data-c0="${sg.c0}" data-n="${sg.c1-sg.c0+1}" style="left:calc(${sg.c0}*100%/7 + 1mm);width:calc(${sg.c1-sg.c0+1}*100%/7 - 2mm)" title="${esc(e.univ)} ${esc(e.names.join(', '))} (${e.start}${multi?' ~ '+e.end:''})"><b>${esc(e.univ)}</b>${esc(e.names.join(', '))}${multi?`<span class="span">${fmtMD(e.start)}~${fmtMD(e.end)}</span>`:''}${isMine(e)?ddayHtml(e,'dd'):''}</div>`;
+      return `<div class="bar ${e.kind==='silgi'?'silgi':e.kind==='result'?'result':''}${sg.contL?' cont-l':''}${sg.contR?' cont-r':''}${isMine(e)?' mine':''}" data-id="${esc(e.id)}" data-lane="${sg.lane}" data-c0="${sg.c0}" data-n="${sg.c1-sg.c0+1}" style="left:calc(${sg.c0}*100%/7 + 1mm);width:calc(${sg.c1-sg.c0+1}*100%/7 - 2mm)" title="${esc(e.univ)}${e.kind==='result'?' 합격자 발표':''} ${esc(namesPlain(e))} (${e.start}${multi?' ~ '+e.end:''})"><b>${esc(e.univ)}${e.kind==='result'?' 📢발표':''}</b>${namesHtml(e)}${multi?`<span class="span">${fmtMD(e.start)}~${fmtMD(e.end)}</span>`:''}${isMine(e)?ddayHtml(e,'dd'):''}</div>`;
     }).join('');
     return `<div class="week">${cells}<div class="lanes">${bars}</div></div>`;
   }).join('');
@@ -566,23 +606,23 @@ function renderMobileMonth(m){
     const k = iso(d), hol = HOLIDAYS[k], ev = EVENTS[k];
     const label = hol ? `<span class="lb">${hol}</span>` : ev ? `<span class="lb ${ev.kind}">${ev.label.replace('대학수학능력시험','수능')}</span>` : '';
     const list = sorted().filter(e => e.start <= k && e.end >= k);
-    const chips = list.slice(0,3).map(e => `<div class="chip${e.kind==='silgi'?' silgi':''}${isMine(e)?' mine':''}${e.start<k?' cl':''}${e.end>k?' cr':''}">${esc(e.univ)}</div>`).join('') + (list.length>3?`<span class="plus">+${list.length-3}</span>`:'');
+    const chips = list.slice(0,3).map(e => `<div class="chip${e.kind==='silgi'?' silgi':e.kind==='result'?' result':''}${isMine(e)?' mine':''}${e.start<k?' cl':''}${e.end>k?' cr':''}">${e.kind==='result'?'📢':''}${esc(e.univ)}</div>`).join('') + (list.length>3?`<span class="plus">+${list.length-3}</span>`:'');
     return `<div class="mcell${dayClasses(d,k)}" data-date="${k}"><div class="n">${d.getDate()}</div>${label}${chips}${todayBadge(k)}</div>`;
   }).join('')).join('');
   return `<section class="mcard" id="mm${m}">
     <div class="mhead"><img src="${LOGO}" alt=""><div class="t"><div class="e">SANNAM HIGH SCHOOL · 3학년 3반</div><h2>수시 면접/실기 일정 달력</h2></div><div class="mo">${m}<small>월</small></div></div>
     <div class="mdow">${DOW.map((d,i)=>`<div class="${i===0?'sun':i===6?'sat':''}">${d}</div>`).join('')}</div>
     <div class="mgrid">${cells}</div>
-    <div class="mlegend"><span><i style="background:var(--ivory);border:1px solid var(--navy)"></i>면접</span><span><i style="background:var(--silgi);border:1px solid var(--navy)"></i>실기</span><span><i style="background:var(--pink-soft);border:2px solid var(--pink)"></i>내 일정</span><span><i style="background:var(--orange-soft);border:2px solid var(--orange)"></i>수능</span><span><i class="today"></i>오늘</span></div>
+    <div class="mlegend"><span><i style="background:var(--ivory);border:1px solid var(--navy)"></i>면접</span><span><i style="background:var(--silgi);border:1px solid var(--navy)"></i>실기</span><span><i style="background:#E8F5EC;border:1px solid #2E7D46"></i>합격발표</span><span><i style="background:var(--pink-soft);border:2px solid var(--pink)"></i>내 일정</span><span><i style="background:var(--orange-soft);border:2px solid var(--orange)"></i>수능</span><span><i class="today"></i>오늘</span></div>
   </section>`;
 }
 function renderMine(){
   const panel = $('minePanel');
   if (!me) { panel.classList.remove('show'); return; }
   const list = sorted().filter(isMine);
-  $('mineTitle').innerHTML = `${esc(me)}의 면접/실기 일정 <small>${list.length}건</small>`;
+  $('mineTitle').innerHTML = `${esc(me)}의 면접/실기 일정 <small>${list.filter(e=>e.kind!=='result').length}건</small>`;
   $('mineBody').innerHTML = list.length
-    ? `<ul>${list.map(e => { const u = splitUniv(e.univ); return `<li data-goto="${esc(e.id)}" data-start="${e.start}" title="달력에서 보기"><span class="d">${fmtMDW(e.start)}${e.end!==e.start?'~'+fmtMDW(e.end):''}</span><span class="u"><b>${esc(u.univ)}</b></span>${ddayHtml(e)}</li>`; }).join('')}</ul>`
+    ? `<ul>${list.map(e => { const u = splitUniv(e.univ); return `<li class="${e.kind==='result'?'result':''}" data-goto="${esc(e.id)}" data-start="${e.start}" title="달력에서 보기"><span class="d">${fmtMDW(e.start)}${e.end!==e.start?'~'+fmtMDW(e.end):''}</span><span class="u">${e.kind==='result'?'<span class="rtag">합격발표</span>':''}<b>${esc(u.univ)}</b></span>${ddayHtml(e)}</li>`; }).join('')}</ul>`
     : `<div class="none">등록된 일정이 없습니다. 조사 폼에 응답했는지 확인하거나 담임 선생님께 알려 주세요.</div>`;
   panel.classList.add('show');
 }
@@ -591,7 +631,7 @@ function render(){
   $('mobile').innerHTML = MONTHS.map(renderMobileMonth).join('');
   layoutBars(); fitLabels(); renderMine(); renderAlerts();
   if (loadedAt) {
-    const n = entries.length, people = new Set(entries.flatMap(e=>e.names)).size;
+    const real = entries.filter(e=>e.kind!=='result'); const n = real.length, people = new Set(real.flatMap(e=>e.names)).size;
     const t = `${pad(loadedAt.getHours())}:${pad(loadedAt.getMinutes())}`;
     $('status').innerHTML = `일정 <b>${n}건</b> · 학생 <b>${people}명</b> · ${t} 갱신` + (badRows.length ? ` · <span class="warn" id="badLink">해석 실패 ${badRows.length}건</span>` : '');
     const bl = $('badLink'); if (bl) bl.onclick = () => { $('badList').textContent = badRows.join('\n'); $('badOv').classList.add('show'); };
@@ -600,7 +640,7 @@ function render(){
 const deptOf = (detail, univ) => { let t = String(detail||'').replace(/^\S+\s+/, ''); const i = t.indexOf(' ('); return (i>=0 ? t.slice(0,i) : t).trim(); };
 function renderAlerts(){
   const t0 = fromISO(TODAY), items = [];
-  entries.forEach(e => {
+  entries.filter(e => e.kind !== 'result').forEach(e => {
     const ds = Math.round((fromISO(e.start) - t0)/86400000), de = Math.round((fromISO(e.end) - t0)/86400000);
     if (ds > 7 || de < 0) return;
     e.names.forEach(n => items.push({e, n, d: Math.max(ds, 0), ongoing: ds <= 0}));
@@ -610,10 +650,10 @@ function renderAlerts(){
   if (!items.length) { box.innerHTML = ''; document.body.classList.remove('has-alerts'); }
   else {
     box.innerHTML = `<h2>⚠ 다가오는 면접·실기<small>D-7 이내 ${items.length}건</small></h2><ul>${items.map(({e,n,d,ongoing}) => {
-      const u = splitUniv(e.univ), dept = deptOf(e.details && e.details[n], u.univ);
+      const u = splitUniv(e.univ), dept = deptOfName(e, n), ann = annOfName(e, n);
       return `<li class="${ongoing?'today':''}${n===me?' mine':''}" data-goto="${esc(e.id)}" data-start="${e.start}" title="달력에서 보기">
         <span class="who">${esc(n)}<span class="kind ${e.kind==='silgi'?'silgi':''}">${e.kind==='silgi'?'실기':'면접'}</span></span><span class="dd">${ongoing?'D-DAY':'D-'+d}</span>
-        <span class="uni">${esc(u.univ)}</span>${dept?`<span class="dept">${esc(dept)}</span>`:''}
+        <span class="uni">${esc(u.univ)}</span>${dept?`<span class="dept">${esc(dept)}</span>`:''}${ann?`<span class="ann">📢 합격 발표 ${fmtMDW(ann)}</span>`:''}
         <span class="dt">${fmtMDW(e.start)}${e.end!==e.start?' ~ '+fmtMDW(e.end):''}</span></li>`; }).join('')}</ul>`;
     document.body.classList.add('has-alerts');
   }
@@ -674,12 +714,18 @@ const sel = $('meSel');
 STUDENTS.forEach(([no,name]) => { const o=document.createElement('option'); o.value=name; o.textContent=`${no}. ${name}`; sel.appendChild(o); });
 sel.value = STUDENTS.some(([,n])=>n===me) ? me : ''; sel.classList.toggle('on', !!sel.value);
 sel.onchange = () => { me = sel.value; sel.classList.toggle('on', !!me); try { localStorage.setItem(ME_KEY, me); } catch(e){} render(); if (me) toast(`${me} 학생의 일정을 분홍색으로 표시합니다`); };
+function dayNames(e){
+  const groups = new Map();
+  e.names.forEach(n => { const key = deptOfName(e,n) + '|' + annOfName(e,n); if (!groups.has(key)) groups.set(key, []); groups.get(key).push(n); });
+  return [...groups].map(([key, ns]) => { const [d, a] = key.split('|');
+    return `<span style="display:block">${esc(ns.join(', '))}</span>${d?`<span class="dp">${esc(d)}</span>`:''}${a?`<span class="ann">📢 합격 발표 ${fmtMDW(a)}</span>`:''}`; }).join('<span style="display:block;height:4px"></span>');
+}
 function openDay(k){
   const d = fromISO(k), hol = HOLIDAYS[k], ev = EVENTS[k];
   const list = sorted().filter(e => e.start <= k && e.end >= k);
   $('dayTitle').innerHTML = `${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})${hol?`<span class="tag hol">${hol}</span>`:''}${ev?`<span class="tag ${ev.kind}">${ev.label}</span>`:''}<button class="x" data-close="dayOv" aria-label="닫기">×</button>`;
   $('dayBody').innerHTML = list.length
-    ? `<ul>${list.map(e => `<li class="${e.kind==='silgi'?'silgi ':''}${isMine(e)?'mine':''}"><div class="txt"><b>${esc(e.univ)}</b>${esc(e.names.join(', '))}${e.start!==e.end?`<small>${fmtMDW(e.start)} ~ ${fmtMDW(e.end)}</small>`:''}</div>${isMine(e)?ddayHtml(e):''}${editToken&&e.editable?`<button class="ed" data-edit="${esc(e.id)}">수정</button>`:''}</li>`).join('')}</ul>`
+    ? `<ul>${list.map(e => `<li class="${e.kind==='silgi'?'silgi ':e.kind==='result'?'result ':''}${isMine(e)?'mine':''}"><div class="txt"><b>${esc(e.univ)}${e.kind==='result'?' 합격자 발표':''}</b>${dayNames(e)}${e.start!==e.end?`<small>${fmtMDW(e.start)} ~ ${fmtMDW(e.end)}</small>`:''}</div>${isMine(e)?ddayHtml(e):''}${editToken&&e.editable?`<button class="ed" data-edit="${esc(e.id)}">수정</button>`:''}</li>`).join('')}</ul>`
     : `<div class="none">이 날짜에 등록된 면접/실기 일정이 없습니다.</div>`;
   if (editToken) $('dayBody').insertAdjacentHTML('beforeend', `<div class="addrow"><button class="btn primary" data-addon="${k}">＋ 이 날짜에 일정 추가</button></div>`);
   $('dayOv').classList.add('show');
@@ -705,6 +751,8 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => { if (e.key==='Escape') document.querySelectorAll('.overlay.show').forEach(o=>o.classList.remove('show')); });
 $('btnPrint').onclick = () => window.print();
+$('chkResult').checked = showResult;
+$('chkResult').onchange = () => { showResult = $('chkResult').checked; try { localStorage.setItem('interviewCal-3-3-showresult', showResult ? '1' : '0'); } catch(e){} render(); };
 $('btnReload').onclick = () => loadData(true);
 
 /* ═══════════ 일정 편집 (GitHub에 직접 저장) ═══════════ */
@@ -743,10 +791,9 @@ setEditMode(!!editToken);
 function mainCols(){
   const h = mainRows[0].map(x => String(x||''));
   const f = re => h.findIndex(c => re.test(c));
-  let kindIdx = f(/^구분$/);
-  return { name:f(/이름|성명/), univ:f(/대학|학교/), start:f(/면접일|시작/), end:f(/종료/), detail:f(/지원 전형|학과/), kind:kindIdx };
+  return { name:f(/이름|성명/), univ:f(/대학|학교/), start:f(/면접일|시작/), end:f(/종료/), detail:f(/지원 전형/), kind:f(/^구분$/), dept:f(/^학과$/), ann:f(/^발표일$/) };
 }
-const rowKind = r => /실기|실적|예체능/.test(r.join(' ')) ? 'silgi' : 'interview';
+const rowKind = r => { const c = mainCols(); const v = c.kind>=0 ? String(r[c.kind]||'').trim() : ''; if (v==='실기') return 'silgi'; if (v==='면접') return 'interview'; return /실기|실적|예체능/.test(r.join(' ')) ? 'silgi' : 'interview'; };
 function rowsOfEntry(e){
   const c = mainCols();
   return mainRows.slice(1).filter(r => {
@@ -764,6 +811,9 @@ function openEditor(entry, presetDate){
   $('edStart').value = entry ? entry.start : (presetDate || '');
   $('edEnd').value = entry && entry.end !== entry.start ? entry.end : '';
   document.querySelectorAll('input[name="edKind"]').forEach(x => x.checked = x.value === (entry ? entry.kind : 'interview'));
+  const dset = entry ? [...new Set(entry.names.map(n => deptOfName(entry, n)))] : [], aset = entry ? [...new Set(entry.names.map(n => annOfName(entry, n)))] : [];
+  $('edDept').value = dset.length === 1 ? dset[0] : ''; $('edDept').dataset.mixed = dset.length > 1 ? '1' : ''; $('edDept').placeholder = dset.length > 1 ? '(학생마다 달라서 비워 둠 · 입력하면 모두 바뀜)' : '예: 웹툰콘텐츠학과';
+  $('edAnn').value = aset.length === 1 ? aset[0] : ''; $('edAnn').dataset.mixed = aset.length > 1 ? '1' : '';
   $('edNames').innerHTML = STUDENTS.map(([no,n]) => `<label><input type="checkbox" value="${n}"${entry && entry.names.includes(n)?' checked':''}>${no}. ${n}</label>`).join('');
   $('edDel').style.display = entry ? '' : 'none';
   $('dayOv').classList.remove('show'); $('edOv').classList.add('show');
@@ -792,18 +842,22 @@ $('edSave').onclick = () => {
   const univ = $('edUniv').value.trim(); let start = $('edStart').value, end = $('edEnd').value || start;
   const kind = document.querySelector('input[name="edKind"]:checked').value;
   const names = [...document.querySelectorAll('#edNames input:checked')].map(x => x.value);
+  const dept = $('edDept').value.trim(), ann = $('edAnn').value, deptMixed = !!$('edDept').dataset.mixed, annMixed = !!$('edAnn').dataset.mixed;
   if (!univ || !start || !names.length) { toast('대학, 시작일, 학생을 모두 정해 주세요'); return; }
   if (end < start) [start, end] = [end, start];
+  if (ann && ann <= end) { toast('합격 발표일은 면접 마지막 날보다 뒤여야 합니다'); return; }
   const old = editing;
   saveMain(() => {
-    const c = mainCols(); const keepDetail = {}, keepRow = {};
-    if (old) { const olds = rowsOfEntry(old); olds.forEach(r => { const nm = String(r[c.name]).replace(/\s+/g,''); keepDetail[nm] = r[c.detail]; keepRow[nm] = r; }); mainRows = mainRows.filter(r => !olds.includes(r)); }
+    for (const col of ['학과','발표일','발표근거']) if (!mainRows[0].includes(col)) { mainRows[0].push(col); for (let i=1;i<mainRows.length;i++) mainRows[i].push(''); }
+    const c = mainCols(); const keepRow = {};
+    if (old) { const olds = rowsOfEntry(old); olds.forEach(r => { keepRow[String(r[c.name]).replace(/\s+/g,'')] = r; }); mainRows = mainRows.filter(r => !olds.includes(r)); }
     names.forEach(n => {
       const row = keepRow[n] ? keepRow[n].slice() : Array(mainRows[0].length).fill('');
       while (row.length < mainRows[0].length) row.push('');
       row[c.name] = n; row[c.univ] = univ; row[c.start] = start; if (c.end >= 0) row[c.end] = end !== start ? end : '';
-      if (c.detail >= 0) row[c.detail] = keepDetail[n] && (rowKind([keepDetail[n]]) === kind) ? keepDetail[n] : '';
-      row[mainCols().kind] = kind === 'silgi' ? '실기' : '면접';
+      row[c.kind] = kind === 'silgi' ? '실기' : '면접';
+      if (!(deptMixed && !dept)) row[c.dept] = dept;
+      if (!(annMixed && !ann)) { if (row[c.ann] !== ann) row[mainRows[0].indexOf('발표근거')] = ann ? '달력에서 직접 입력' : ''; row[c.ann] = ann; }
       mainRows.push(row);
     });
     const body = mainRows.slice(1); body.sort((a,b) => String(a[c.start]).localeCompare(String(b[c.start])) || String(a[c.univ]).localeCompare(String(b[c.univ]),'ko'));
