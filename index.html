@@ -346,7 +346,14 @@ body.exporting .bar .dd{display:none}
 <div class="overlay" id="tokOv"><div class="modal">
   <h3>✏️ 일정 편집 켜기<button class="x" data-close="tokOv" aria-label="닫기">×</button></h3>
   <div class="body">
-    <div class="hint">편집 내용은 GitHub 저장소의 <b>일정.csv</b>에 바로 저장되고, 1~2분 뒤 모든 학생 화면에 반영됩니다. 처음 한 번만 GitHub 열쇠(토큰)를 만들어 넣으면 이 기기에서는 계속 편집할 수 있습니다.</div>
+    <div class="hint">편집 내용은 GitHub 저장소의 <b>일정.csv</b>에 바로 저장되고, 1~2분 뒤 모든 학생 화면에 반영됩니다.</div>
+    <div id="pwBox" style="display:none">
+      <div class="form"><label>편집 비밀번호 <input type="password" id="pwIn" autocomplete="current-password" placeholder="선생님이 정한 비밀번호"></label></div>
+      <div class="foot" style="padding:8px 0 0;border:0"><button class="btn primary" id="pwSave">비밀번호로 편집 켜기</button></div>
+      <details id="tokDetails" style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">토큰을 새로 넣거나 비밀번호를 바꾸려면</summary><div id="tokSlot"></div></details>
+    </div>
+    <div id="tokBox">
+    <div class="hint">처음 한 번만 GitHub 열쇠(토큰)를 만들어 넣고 <b>편집 비밀번호</b>를 정해 두면, 그다음부터는 어느 기기에서든 비밀번호만으로 편집할 수 있습니다.</div>
     <ol class="steps">
       <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub 토큰 만들기</a>를 엽니다 (gytlr1406 계정으로 로그인).</li>
       <li>Token name은 <code>면접달력</code>, Expiration은 원하는 기간(예: 2026-12-31).</li>
@@ -355,9 +362,12 @@ body.exporting .bar .dd{display:none}
       <li><b>Generate token</b>을 누르고 나온 값(<code>github_pat_…</code>)을 복사해 아래에 붙여 넣습니다.</li>
     </ol>
     <div class="form"><label>GitHub 토큰 <input type="password" id="tokIn" autocomplete="off" placeholder="github_pat_…"></label></div>
-    <div class="hint">토큰은 이 브라우저에만 저장되고 저장소나 다른 곳에는 올라가지 않습니다. 학생이 함께 쓰는 기기에는 넣지 마세요.</div>
+    <div class="form"><label>편집 비밀번호 정하기 (선택, 8자 이상) <input type="password" id="pwNew" autocomplete="new-password" placeholder="비워 두면 비밀번호 없이 이 기기에만 저장"></label></div>
+    <div class="hint">비밀번호를 정하면 토큰을 그 비밀번호로 <b>암호화한 파일</b>(edit-key.json)만 저장소에 올라가고, 토큰 원문은 올라가지 않습니다. 학생이 짐작하기 어려운 비밀번호로 정해 주세요. 학생이 함께 쓰는 기기에서는 편집 후 꼭 편집을 꺼 주세요.</div>
+    <div class="foot" style="padding:8px 0 0;border:0"><button class="btn primary" id="tokSave">확인하고 편집 켜기</button></div>
+    </div>
   </div>
-  <div class="foot"><button class="btn" data-close="tokOv">취소</button><button class="btn primary" id="tokSave">확인하고 편집 켜기</button></div>
+  <div class="foot"><button class="btn" data-close="tokOv">취소</button></div>
 </div></div>
 
 <div class="overlay" id="edOv"><div class="modal">
@@ -775,15 +785,68 @@ function setEditMode(on, forget){
   $('btnEdit').classList.toggle('edit-on', !!editToken);
   $('btnEdit').textContent = editToken ? '✏️ 편집 중 (끄기)' : '✏️ 일정 편집';
 }
-$('btnEdit').onclick = () => {
+// 편집 비밀번호: 토큰을 비밀번호로 암호화(PBKDF2 + AES-GCM)한 edit-key.json만 저장소에 둔다
+const KEY_PATH = 'edit-key.json', PBKDF2_ITER = 600000;
+const b64e = u8 => btoa(String.fromCharCode(...u8)), b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function pwKey(pw, salt, iter){
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name:'PBKDF2', salt, iterations:iter, hash:'SHA-256' }, base, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']);
+}
+async function sealToken(tok, pw){
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name:'AES-GCM', iv }, await pwKey(pw, salt, PBKDF2_ITER), new TextEncoder().encode(tok)));
+  return { v:1, iter:PBKDF2_ITER, salt:b64e(salt), iv:b64e(iv), data:b64e(ct) };
+}
+async function openToken(k, pw){
+  const pt = await crypto.subtle.decrypt({ name:'AES-GCM', iv:b64d(k.iv) }, await pwKey(pw, b64d(k.salt), k.iter), b64d(k.data));
+  return new TextDecoder().decode(pt);
+}
+async function loadEditKey(){
+  try { const r = await fetch(KEY_PATH + '?_=' + Date.now(), { cache:'no-store' }); if (!r.ok) return null; const k = await r.json(); return k && k.data ? k : null; } catch(e){ return null; }
+}
+async function putEditKey(k){
+  const url = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${KEY_PATH}`;
+  const g = await fetch(url + '?ref=main&_=' + Date.now(), { headers: ghHeaders(), cache:'no-store' });
+  const sha = g.ok ? (await g.json()).sha : undefined;
+  const r = await fetch(url, { method:'PUT', headers: { ...ghHeaders(), 'Content-Type':'application/json' },
+    body: JSON.stringify({ message: '편집 비밀번호 설정', content: textToB64(JSON.stringify(k, null, 2) + '\n'), sha, branch:'main' }) });
+  if (!r.ok) throw new Error('비밀번호 파일 저장 실패 ' + r.status);
+}
+function editOn(t){
+  editToken = t; try { localStorage.setItem(TOK_KEY, t); } catch(e){}
+  setEditMode(true); $('tokOv').classList.remove('show'); loadData(false);
+}
+let editKey = null;
+$('btnEdit').onclick = async () => {
   if (editToken) { if (confirm('이 기기에서 편집 모드를 끄고 저장된 GitHub 토큰을 지울까요?')) { setEditMode(false, true); toast('편집 모드를 껐습니다'); } return; }
-  $('tokIn').value = ''; $('tokOv').classList.add('show'); setTimeout(()=>$('tokIn').focus(), 50);
+  editKey = await loadEditKey();
+  const hasPw = !!editKey;
+  $('pwBox').style.display = hasPw ? '' : 'none';
+  (hasPw ? $('tokSlot') : $('pwBox').parentNode).appendChild($('tokBox'));
+  $('tokDetails').open = false;
+  $('tokIn').value = ''; $('pwIn').value = ''; $('pwNew').value = '';
+  $('tokOv').classList.add('show'); setTimeout(()=>(hasPw ? $('pwIn') : $('tokIn')).focus(), 50);
 };
+$('pwSave').onclick = async () => {
+  const pw = $('pwIn').value; if (!pw) { toast('비밀번호를 입력해 주세요'); return; }
+  let t; try { t = await openToken(editKey, pw); } catch(e) { toast('비밀번호가 맞지 않습니다'); return; }
+  editToken = t;
+  try { await ghGetFile(); editOn(t); toast('편집 모드가 켜졌습니다. 날짜를 눌러 일정을 추가·수정하세요'); }
+  catch(err) { editToken = ''; setEditMode(false); toast('비밀번호는 맞지만 저장된 토큰이 만료되었습니다. 아래 \'토큰을 새로 넣거나…\'에서 새 토큰과 비밀번호를 다시 정해 주세요'); $('tokDetails').open = true; }
+};
+$('pwIn').onkeydown = e => { if (e.key === 'Enter') $('pwSave').click(); };
 $('tokSave').onclick = async () => {
   const t = $('tokIn').value.trim(); if (!t) { toast('토큰을 붙여 넣어 주세요'); return; }
+  const pw = $('pwNew').value; if (pw && pw.length < 8) { toast('비밀번호는 8자 이상으로 정해 주세요'); return; }
   editToken = t;
-  try { await ghGetFile(); try { localStorage.setItem(TOK_KEY, t); } catch(e){} setEditMode(true); $('tokOv').classList.remove('show'); toast('편집 모드가 켜졌습니다. 날짜를 눌러 일정을 추가·수정하세요'); loadData(false); }
-  catch(err) { editToken = ''; setEditMode(false); toast('확인 실패: ' + err.message + ' (권한: Contents Read and write, 저장소 sannam-3-3-calendar)'); }
+  try { await ghGetFile(); }
+  catch(err) { editToken = ''; setEditMode(false); toast('확인 실패: ' + err.message + ' (권한: Contents Read and write, 저장소 sannam-3-3-calendar)'); return; }
+  if (pw) {
+    try { await putEditKey(await sealToken(t, pw)); }
+    catch(err) { editOn(t); toast('편집은 켜졌지만 ' + err.message + ' — 비밀번호는 저장되지 않았습니다'); return; }
+  }
+  editOn(t);
+  toast(pw ? '편집 모드가 켜졌고 비밀번호가 저장되었습니다. 다음부터는 비밀번호만 넣으면 됩니다' : '편집 모드가 켜졌습니다. 날짜를 눌러 일정을 추가·수정하세요');
 };
 setEditMode(!!editToken);
 
