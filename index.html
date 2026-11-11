@@ -534,6 +534,7 @@ async function fetchCsv(url){
   const r = await fetch(u, {cache:'no-store'}); if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return parseCsv(await r.text());
 }
+const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('응답 없음')), ms))]);
 async function loadData(showToast){
   const sources = [[CFG.csvUrl,'일정 파일'],[CFG.extraCsvUrl,'구글 시트']].filter(x=>x[0]);
   if (!sources.length) { showNotice('설정이 아직 안 됐습니다', `저장소의 <code>config.js</code>에 일정 CSV 파일 이름이나 구글 시트의 <b>웹에 게시</b> CSV 주소를 넣어 주세요.`); $('status').textContent='일정 출처가 설정되지 않았습니다'; render(); return; }
@@ -543,7 +544,10 @@ async function loadData(showToast){
     for (const [url,label] of sources) {
       const isMain = url === CFG.csvUrl;
       let rows;
-      if (isMain && editToken) { const f = await ghGetFile(); mainSha = f.sha; rows = parseCsv(f.text); }   // 편집 중엔 GitHub에서 바로 읽어 항상 최신
+      if (isMain && editToken) {   // 편집 중엔 GitHub에서 바로 읽어 항상 최신. 막히거나 느리면 공개 파일로 대신 보여 줌
+        try { const f = await withTimeout(ghGetFile(), 8000); mainSha = f.sha; rows = parseCsv(f.text); }
+        catch(e) { console.warn(e); rows = await fetchCsv(url); toast('편집용 최신본을 GitHub에서 받지 못해 공개된 일정으로 보여 줍니다 (' + e.message + ')'); }
+      }
       else rows = await fetchCsv(url);
       if (isMain) mainRows = rows.map(r => r.slice());
       const r = rowsToEntries(rows, label, isMain ? 'main' : 'extra'); all.push(...r.out); bad.push(...r.bad);
